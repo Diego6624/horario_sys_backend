@@ -14,6 +14,9 @@ public class HoraryServiceImpl implements HoraryService {
     @Autowired
     private HoraryRepository horaryRepository;
 
+    @Autowired
+    private WebSocketService webSocketService;
+
     // LISTAR TODOS (para TV)
     @Override
     public List<Horary> listar() {
@@ -41,6 +44,14 @@ public class HoraryServiceImpl implements HoraryService {
         existente.setHorario(datos.getHorario());
         existente.setNumSesion(datos.getNumSesion());
 
-        return horaryRepository.save(existente);
+        Horary actualizado = horaryRepository.save(existente);
+
+        // 🔔 NOTIFICAR CAMBIO EN TIEMPO REAL
+        webSocketService.enviarActualizacionHorario(
+                "UPDATE",
+                actualizado.getId() // usa el ID de tu entidad
+        );
+
+        return actualizado;
     }
 }
