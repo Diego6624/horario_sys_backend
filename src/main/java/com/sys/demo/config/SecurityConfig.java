@@ -18,62 +18,43 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-            // ===============================
-            // 🔓 CORS
-            // ===============================
             .cors(cors -> {})
-
-            // ===============================
-            // 🔓 CSRF OFF (API REST / WS)
-            // ===============================
             .csrf(csrf -> csrf.disable())
-
-            // ===============================
-            // 🔓 Stateless (JWT / API)
-            // ===============================
             .sessionManagement(session ->
                 session.sessionCreationPolicy(
                     SessionCreationPolicy.STATELESS
                 )
             )
 
-            // ===============================
-            // 🔓 RUTAS PUBLICAS
-            // ===============================
             .authorizeHttpRequests(auth -> auth
 
+                // ✅ PERMITIR PREFLIGHT
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.OPTIONS,
+                    "/**"
+                ).permitAll()
+
                 // AUTH
-                .requestMatchers("/api/auth/**")
-                .permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
 
-                // 📺 HORARIOS (TV pública)
-                .requestMatchers("/api/horaries/**")
-                .permitAll()
+                // HORARIOS
+                .requestMatchers("/api/horaries/**").permitAll()
 
-                // 🔌 WEBSOCKET
-                .requestMatchers("/ws-horarios/**")
-                .permitAll()
+                // WEBSOCKET
+                .requestMatchers("/ws-horarios/**").permitAll()
+                .requestMatchers("/topic/**").permitAll()
+                .requestMatchers("/app/**").permitAll()
 
-                .requestMatchers("/topic/**")
-                .permitAll()
-
-                .requestMatchers("/app/**")
-                .permitAll()
-
-                // 📄 Swagger
+                // SWAGGER
                 .requestMatchers(
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                     "/swagger-ui.html"
                 ).permitAll()
 
-                // 🔒 Todo lo demás protegido
                 .anyRequest().authenticated()
             )
 
-            // ===============================
-            // 🔓 Sin login HTML
-            // ===============================
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable());
 
