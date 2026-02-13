@@ -18,13 +18,23 @@ public class HoraryController {
     private HoraryService horaryService;
 
     // ===============================
-    // 📺 LISTAR TODOS (Pantalla TV)
+    // 📺 LISTAR ACTIVOS (Pantalla TV)
     // ===============================
     @GetMapping
     public ResponseEntity<List<Horary>> listar() {
 
-        // SOLO aulas habilitadas para la TV
         List<Horary> lista = horaryService.listarActivos();
+
+        return ResponseEntity.ok(lista);
+    }
+
+    // ===============================
+    // 🛠️ ADMIN → TODOS
+    // ===============================
+    @GetMapping("/all")
+    public ResponseEntity<List<Horary>> listarTodos() {
+
+        List<Horary> lista = horaryService.listar();
 
         return ResponseEntity.ok(lista);
     }
