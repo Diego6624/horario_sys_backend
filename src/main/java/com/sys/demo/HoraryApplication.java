@@ -21,12 +21,12 @@ public class HoraryApplication {
 
             if (repo.count() == 0) {
 
-                repo.save(new Horary(null,"multiuso","","","",""));
-                repo.save(new Horary(null,"201","","","",""));
-                repo.save(new Horary(null,"202","","","",""));
-                repo.save(new Horary(null,"301","","","",""));
-                repo.save(new Horary(null,"401","","","",""));
-                repo.save(new Horary(null,"402","","","",""));
+                repo.save(new Horary(null,"multiuso","","","","", true));
+                repo.save(new Horary(null,"201","","","","", true));
+                repo.save(new Horary(null,"202","","","","", true));
+                repo.save(new Horary(null,"301","","","","", true));
+                repo.save(new Horary(null,"401","","","","", true));
+                repo.save(new Horary(null,"402","","","","", true));
             }
         };
     }

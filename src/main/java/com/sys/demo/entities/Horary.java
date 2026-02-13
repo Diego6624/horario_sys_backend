@@ -36,4 +36,7 @@ public class Horary {
 
     @Column(name = "numSesion")
     private String numSesion;
+
+    @Column(name = "enabled")
+    private Boolean enabled = true;
 }

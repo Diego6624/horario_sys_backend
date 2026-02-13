@@ -11,4 +11,8 @@ public interface HoraryService {
     Horary buscarPorLab(String numLab);
 
     Horary actualizar(String numLab, Horary datos);
+
+    List<Horary> listarActivos();
+
+    Horary toggle(Long id);
 }

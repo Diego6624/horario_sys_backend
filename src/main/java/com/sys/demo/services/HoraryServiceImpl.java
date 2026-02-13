@@ -23,6 +23,11 @@ public class HoraryServiceImpl implements HoraryService {
         return horaryRepository.findAll();
     }
 
+    @Override
+    public List<Horary> listarActivos() {
+        return horaryRepository.findByEnabledTrue();
+    }
+
     // BUSCAR POR AULA (para editar)
     @Override
     public Horary buscarPorLab(String numLab) {
@@ -50,6 +55,25 @@ public class HoraryServiceImpl implements HoraryService {
         webSocketService.enviarActualizacionHorario(
                 "UPDATE",
                 actualizado.getId() // usa el ID de tu entidad
+        );
+
+        return actualizado;
+    }
+
+    @Override
+    public Horary toggle(Long id) {
+
+        Horary h = horaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Horario no encontrado"));
+
+        h.setEnabled(!h.getEnabled());
+
+        Horary actualizado = horaryRepository.save(h);
+
+        // 🔔 Notificar a la TV
+        webSocketService.enviarActualizacionHorario(
+                "TOGGLE",
+                actualizado.getId()
         );
 
         return actualizado;

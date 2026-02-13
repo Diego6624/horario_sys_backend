@@ -22,7 +22,10 @@ public class HoraryController {
     // ===============================
     @GetMapping
     public ResponseEntity<List<Horary>> listar() {
-        List<Horary> lista = horaryService.listar();
+
+        // SOLO aulas habilitadas para la TV
+        List<Horary> lista = horaryService.listarActivos();
+
         return ResponseEntity.ok(lista);
     }
 
@@ -52,6 +55,26 @@ public class HoraryController {
         try {
 
             Horary actualizado = horaryService.actualizar(aula, datos);
+
+            return ResponseEntity.ok(actualizado);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
+    }
+
+    // ==================================
+    // 👁️ TOGGLE HABILITAR / OCULTAR
+    // ==================================
+    @PutMapping("/toggle/{id}")
+    public ResponseEntity<?> toggle(@PathVariable Long id) {
+
+        try {
+
+            Horary actualizado = horaryService.toggle(id);
 
             return ResponseEntity.ok(actualizado);
 
