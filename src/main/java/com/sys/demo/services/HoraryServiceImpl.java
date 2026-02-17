@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.sys.demo.entities.Horary;
+import com.sys.demo.entities.Status;
 import com.sys.demo.repositories.HoraryRepository;
+import com.sys.demo.repositories.StatusRepository;
 
 @Service
 public class HoraryServiceImpl implements HoraryService {
@@ -16,6 +18,9 @@ public class HoraryServiceImpl implements HoraryService {
 
     @Autowired
     private WebSocketService webSocketService;
+
+    @Autowired
+    private StatusRepository statusRepository;
 
     // LISTAR TODOS (para TV)
     @Override
@@ -48,6 +53,13 @@ public class HoraryServiceImpl implements HoraryService {
         existente.setNameCurso(datos.getNameCurso());
         existente.setHorario(datos.getHorario());
         existente.setNumSesion(datos.getNumSesion());
+        
+        // Estado por aula 
+        Status status = statusRepository
+                .findById(datos.getStatus().getId())
+                .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
+
+        existente.setStatus(status);
 
         Horary actualizado = horaryRepository.save(existente);
 
@@ -73,8 +85,7 @@ public class HoraryServiceImpl implements HoraryService {
         // 🔔 Notificar a la TV
         webSocketService.enviarActualizacionHorario(
                 "TOGGLE",
-                actualizado.getId()
-        );
+                actualizado.getId());
 
         return actualizado;
     }
