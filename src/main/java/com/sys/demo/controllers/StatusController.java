@@ -9,7 +9,7 @@ import com.sys.demo.entities.Status;
 import com.sys.demo.services.StatusService;
 
 @RestController
-@RequestMapping("/api/status")
+@RequestMapping("/api/status/status")
 @CrossOrigin("*")
 public class StatusController {
 
