@@ -15,4 +15,6 @@ public interface HoraryService {
     List<Horary> listarActivos();
 
     Horary toggle(Long id);
+
+    void cambiarEstado(Long horaryId, Long statusId);
 }

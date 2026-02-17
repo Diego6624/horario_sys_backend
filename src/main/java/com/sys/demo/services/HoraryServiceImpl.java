@@ -53,8 +53,8 @@ public class HoraryServiceImpl implements HoraryService {
         existente.setNameCurso(datos.getNameCurso());
         existente.setHorario(datos.getHorario());
         existente.setNumSesion(datos.getNumSesion());
-        
-        // Estado por aula 
+
+        // Estado por aula
         Status status = statusRepository
                 .findById(datos.getStatus().getId())
                 .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
@@ -88,5 +88,22 @@ public class HoraryServiceImpl implements HoraryService {
                 actualizado.getId());
 
         return actualizado;
+    }
+
+    @Override
+    public void cambiarEstado(Long horaryId, Long statusId) {
+
+        Horary h = horaryRepository.findById(horaryId)
+                .orElseThrow(() -> new RuntimeException("Aula no encontrada"));
+
+        Status status = statusRepository.findById(statusId)
+                .orElseThrow(() -> new RuntimeException("Estado no existe"));
+
+        h.setStatus(status);
+
+        horaryRepository.save(h);
+
+        // 🔥 Notificar TVs
+        webSocketService.enviarActualizacionHorario("STATUS_CHANGE", h.getId());
     }
 }

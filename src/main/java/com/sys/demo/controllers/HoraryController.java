@@ -1,6 +1,7 @@
 package com.sys.demo.controllers;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -94,5 +95,17 @@ public class HoraryController {
                     .badRequest()
                     .body(e.getMessage());
         }
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<?> cambiarEstado(
+            @PathVariable Long id,
+            @RequestBody Map<String, Long> body) {
+
+        Long statusId = body.get("statusId");
+
+        horaryService.cambiarEstado(id, statusId);
+
+        return ResponseEntity.ok().build();
     }
 }
