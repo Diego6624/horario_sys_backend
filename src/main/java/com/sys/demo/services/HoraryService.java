@@ -17,4 +17,6 @@ public interface HoraryService {
     Horary toggle(Long id);
 
     Horary cambiarEstado(Long horaryId, Long statusId);
+
+    String getCurrentShift();
 }

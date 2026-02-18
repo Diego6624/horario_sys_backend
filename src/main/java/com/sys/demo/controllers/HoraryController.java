@@ -104,8 +104,13 @@ public class HoraryController {
 
         Long statusId = body.get("statusId");
 
-        Horary actualizado = horaryService.cambiarEstado(id, statusId);
+        horaryService.cambiarEstado(id, statusId);
 
-        return ResponseEntity.ok(actualizado);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/current-shift")
+    public String getCurrentShift() {
+        return horaryService.getCurrentShift();
     }
 }

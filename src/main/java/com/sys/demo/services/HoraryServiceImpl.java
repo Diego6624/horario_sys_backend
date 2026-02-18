@@ -1,5 +1,7 @@
 package com.sys.demo.services;
 
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,5 +111,24 @@ public class HoraryServiceImpl implements HoraryService {
                 actualizado.getId());
 
         return actualizado; 
+    }
+
+    public String getCurrentShift() {
+
+        LocalTime now = LocalTime.now(
+            ZoneId.of("America/Lima"));
+
+        // 00:00 - 11:59
+        if (now.isBefore(LocalTime.NOON)) {
+            return "MAÑANA";
+        }
+
+        // 12:00 - 17:59
+        if (now.isBefore(LocalTime.of(18, 0))) {
+            return "TARDE";
+        }
+
+        // 18:00 - 23:59
+        return "NOCHE";
     }
 }
