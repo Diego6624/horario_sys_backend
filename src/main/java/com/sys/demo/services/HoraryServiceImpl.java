@@ -91,7 +91,7 @@ public class HoraryServiceImpl implements HoraryService {
     }
 
     @Override
-    public void cambiarEstado(Long horaryId, Long statusId) {
+    public Horary cambiarEstado(Long horaryId, Long statusId) {
 
         Horary h = horaryRepository.findById(horaryId)
                 .orElseThrow(() -> new RuntimeException("Aula no encontrada"));
@@ -101,9 +101,13 @@ public class HoraryServiceImpl implements HoraryService {
 
         h.setStatus(status);
 
-        horaryRepository.save(h);
+        Horary actualizado = horaryRepository.save(h);
 
         // 🔥 Notificar TVs
-        webSocketService.enviarActualizacionHorario("STATUS_CHANGE", h.getId());
+        webSocketService.enviarActualizacionHorario(
+                "STATUS_CHANGE",
+                actualizado.getId());
+
+        return actualizado; 
     }
 }

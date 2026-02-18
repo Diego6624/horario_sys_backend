@@ -104,8 +104,8 @@ public class HoraryController {
 
         Long statusId = body.get("statusId");
 
-        horaryService.cambiarEstado(id, statusId);
+        Horary actualizado = horaryService.cambiarEstado(id, statusId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(actualizado);
     }
 }

@@ -16,5 +16,5 @@ public interface HoraryService {
 
     Horary toggle(Long id);
 
-    void cambiarEstado(Long horaryId, Long statusId);
+    Horary cambiarEstado(Long horaryId, Long statusId);
 }
