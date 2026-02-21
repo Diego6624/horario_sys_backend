@@ -34,6 +34,8 @@ public class Schedule {
     private LocalTime endTime;
 
     private String docente;
+
     private String curso;
+    
     private String sesion;
 }
