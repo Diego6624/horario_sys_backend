@@ -37,6 +37,9 @@ public class SecurityConfig {
 
                         // HORARIOS
                         .requestMatchers("/api/horaries/**").permitAll()
+                        .requestMatchers("/status/**").permitAll()
+                        .requestMatchers("/all/**").permitAll()
+
 
                         // WEBSOCKET
                         .requestMatchers("/ws-horarios/**").permitAll()
