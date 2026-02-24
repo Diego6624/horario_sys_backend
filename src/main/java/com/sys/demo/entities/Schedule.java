@@ -10,32 +10,36 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "schedule")
 public class Schedule {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "num_lab", nullable = false)
-    private String numLab;
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, name = "dayOfWeek")
     private DayOfWeek dayOfWeek;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "startTime")
     private LocalTime startTime;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "endTime")
     private LocalTime endTime;
 
     private String docente;
-
     private String curso;
-    
     private String sesion;
+
+    @ManyToOne
+    @JoinColumn(name = "classroom_id", nullable = false)
+    private Classroom classroom;
+
 }

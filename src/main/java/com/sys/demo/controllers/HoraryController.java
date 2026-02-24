@@ -1,5 +1,6 @@
 package com.sys.demo.controllers;
 
+import java.time.DayOfWeek;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +24,7 @@ public class HoraryController {
     // ===============================
     @GetMapping
     public ResponseEntity<List<Horary>> listar() {
-
         List<Horary> lista = horaryService.listarActivos();
-
         return ResponseEntity.ok(lista);
     }
 
@@ -34,46 +33,41 @@ public class HoraryController {
     // ===============================
     @GetMapping("/all")
     public ResponseEntity<List<Horary>> listarTodos() {
-
         List<Horary> lista = horaryService.listar();
-
         return ResponseEntity.ok(lista);
     }
 
     // ==================================
-    // 🔍 BUSCAR POR AULA (Editar form)
+    // 🔍 BUSCAR POR CLASSROOM (Editar form)
     // ==================================
-    @GetMapping("/aula/{aula}")
-    public ResponseEntity<?> buscarPorAula(@PathVariable String aula) {
+    @GetMapping("/classroom/{id}")
+    public ResponseEntity<List<Horary>> buscarPorClassroom(@PathVariable Long id) {
+        List<Horary> horarios = horaryService.listarPorClassroom(id);
+        return ResponseEntity.ok(horarios);
+    }
 
-        Horary horary = horaryService.buscarPorLab(aula);
-
-        if (horary == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(horary);
+    // ==================================
+    // 🔍 LISTAR POR DÍA DE LA SEMANA
+    // ==================================
+    @GetMapping("/day/{day}")
+    public ResponseEntity<List<Horary>> listarPorDia(@PathVariable String day) {
+        DayOfWeek dia = DayOfWeek.valueOf(day.toUpperCase());
+        List<Horary> horarios = horaryService.listarPorDia(dia);
+        return ResponseEntity.ok(horarios);
     }
 
     // ==================================
     // ✏️ ACTUALIZAR HORARIO
     // ==================================
-    @PutMapping("/aula/{aula}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> actualizar(
-            @PathVariable String aula,
+            @PathVariable Long id,
             @RequestBody Horary datos) {
-
         try {
-
-            Horary actualizado = horaryService.actualizar(aula, datos);
-
+            Horary actualizado = horaryService.actualizar(id, datos);
             return ResponseEntity.ok(actualizado);
-
         } catch (RuntimeException e) {
-
-            return ResponseEntity
-                    .badRequest()
-                    .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -82,33 +76,29 @@ public class HoraryController {
     // ==================================
     @PutMapping("/toggle/{id}")
     public ResponseEntity<?> toggle(@PathVariable Long id) {
-
         try {
-
             Horary actualizado = horaryService.toggle(id);
-
             return ResponseEntity.ok(actualizado);
-
         } catch (RuntimeException e) {
-
-            return ResponseEntity
-                    .badRequest()
-                    .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+    // ==================================
+    // 🔄 CAMBIAR ESTADO
+    // ==================================
     @PutMapping("/{id}/status")
     public ResponseEntity<?> cambiarEstado(
             @PathVariable Long id,
             @RequestBody Map<String, Long> body) {
-
         Long statusId = body.get("statusId");
-
         horaryService.cambiarEstado(id, statusId);
-
         return ResponseEntity.ok().build();
     }
 
+    // ==================================
+    // ⏰ TURNO ACTUAL
+    // ==================================
     @GetMapping("/current-shift")
     public String getCurrentShift() {
         return horaryService.getCurrentShift();

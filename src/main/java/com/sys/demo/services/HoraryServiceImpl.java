@@ -1,5 +1,6 @@
 package com.sys.demo.services;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -7,9 +8,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.sys.demo.entities.Classroom;
 import com.sys.demo.entities.Horary;
+import com.sys.demo.entities.Schedule;
 import com.sys.demo.entities.Status;
+import com.sys.demo.repositories.ClassroomRepository;
 import com.sys.demo.repositories.HoraryRepository;
+import com.sys.demo.repositories.ScheduleRepository;
 import com.sys.demo.repositories.StatusRepository;
 
 @Service
@@ -19,12 +24,17 @@ public class HoraryServiceImpl implements HoraryService {
     private HoraryRepository horaryRepository;
 
     @Autowired
-    private WebSocketService webSocketService;
+    private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private ClassroomRepository classroomRepository;
 
     @Autowired
     private StatusRepository statusRepository;
 
-    // LISTAR TODOS (para TV)
+    @Autowired
+    private WebSocketService webSocketService;
+
     @Override
     public List<Horary> listar() {
         return horaryRepository.findAll();
@@ -35,100 +45,88 @@ public class HoraryServiceImpl implements HoraryService {
         return horaryRepository.findByEnabledTrue();
     }
 
-    // BUSCAR POR AULA (para editar)
     @Override
-    public Horary buscarPorLab(String numLab) {
-        return horaryRepository.findByNumLab(numLab);
+    public Horary buscarPorId(Long id) {
+        return horaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Horario no encontrado"));
     }
 
-    // ACTUALIZAR
     @Override
-    public Horary actualizar(String numLab, Horary datos) {
+    public Horary actualizar(Long id, Horary datos) {
+        Horary existente = horaryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Horario no encontrado"));
 
-        Horary existente = horaryRepository.findByNumLab(numLab);
-
-        if (existente == null) {
-            throw new RuntimeException("Aula no encontrada");
+        // Actualizar relaciones
+        if (datos.getSchedule() != null) {
+            Schedule schedule = scheduleRepository.findById(datos.getSchedule().getId())
+                    .orElseThrow(() -> new RuntimeException("Schedule no encontrado"));
+            existente.setSchedule(schedule);
         }
 
-        existente.setNameDocente(datos.getNameDocente());
-        existente.setNameCurso(datos.getNameCurso());
-        existente.setHorario(datos.getHorario());
-        existente.setNumSesion(datos.getNumSesion());
+        if (datos.getClassroom() != null) {
+            Classroom classroom = classroomRepository.findById(datos.getClassroom().getId())
+                    .orElseThrow(() -> new RuntimeException("Classroom no encontrado"));
+            existente.setClassroom(classroom);
+        }
 
-        // Estado por aula
-        Status status = statusRepository
-                .findById(datos.getStatus().getId())
-                .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
-
-        existente.setStatus(status);
+        if (datos.getStatus() != null) {
+            Status status = statusRepository.findById(datos.getStatus().getId())
+                    .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
+            existente.setStatus(status);
+        }
 
         Horary actualizado = horaryRepository.save(existente);
 
-        // 🔔 NOTIFICAR CAMBIO EN TIEMPO REAL
-        webSocketService.enviarActualizacionHorario(
-                "UPDATE",
-                actualizado.getId() // usa el ID de tu entidad
-        );
+        // 🔔 Notificar cambio
+        webSocketService.enviarActualizacionHorario("UPDATE", actualizado.getId());
 
         return actualizado;
     }
 
     @Override
     public Horary toggle(Long id) {
-
         Horary h = horaryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Horario no encontrado"));
 
         h.setEnabled(!h.getEnabled());
-
         Horary actualizado = horaryRepository.save(h);
 
-        // 🔔 Notificar a la TV
-        webSocketService.enviarActualizacionHorario(
-                "TOGGLE",
-                actualizado.getId());
-
+        webSocketService.enviarActualizacionHorario("TOGGLE", actualizado.getId());
         return actualizado;
     }
 
     @Override
     public Horary cambiarEstado(Long horaryId, Long statusId) {
-
         Horary h = horaryRepository.findById(horaryId)
-                .orElseThrow(() -> new RuntimeException("Aula no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Horario no encontrado"));
 
         Status status = statusRepository.findById(statusId)
-                .orElseThrow(() -> new RuntimeException("Estado no existe"));
+                .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
 
         h.setStatus(status);
-
         Horary actualizado = horaryRepository.save(h);
 
-        // 🔥 Notificar TVs
-        webSocketService.enviarActualizacionHorario(
-                "STATUS_CHANGE",
-                actualizado.getId());
-
-        return actualizado; 
+        webSocketService.enviarActualizacionHorario("STATUS_CHANGE", actualizado.getId());
+        return actualizado;
     }
 
+    @Override
+    public List<Horary> listarPorDia(DayOfWeek dia) {
+        return horaryRepository.findByScheduleDayOfWeek(dia);
+    }
+
+    @Override
+    public List<Horary> listarPorClassroom(Long classroomId) {
+        return horaryRepository.findByClassroomId(classroomId);
+    }
+
+    @Override
     public String getCurrentShift() {
-
-        LocalTime now = LocalTime.now(
-            ZoneId.of("America/Lima"));
-
-        // 00:00 - 11:59
-        if (now.isBefore(LocalTime.NOON)) {
+        LocalTime now = LocalTime.now(ZoneId.of("America/Lima"));
+        if (now.isBefore(LocalTime.NOON))
             return "MAÑANA";
-        }
-
-        // 12:00 - 17:59
-        if (now.isBefore(LocalTime.of(18, 0))) {
+        if (now.isBefore(LocalTime.of(18, 0)))
             return "TARDE";
-        }
-
-        // 18:00 - 23:59
         return "NOCHE";
     }
 }

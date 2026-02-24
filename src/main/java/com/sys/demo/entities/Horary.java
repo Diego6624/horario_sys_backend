@@ -20,29 +20,24 @@ import lombok.NoArgsConstructor;
 public class Horary {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numLab", unique = true, nullable = false)
-    private String numLab;
+    // Aula física
+    @ManyToOne
+    @JoinColumn(name = "classroom_id", nullable = false)
+    private Classroom classroom;
 
-    @Column(name = "nameDocente")
-    private String nameDocente;
+    // Bloque semanal
+    @ManyToOne
+    @JoinColumn(name = "schedule_id", nullable = false)
+    private Schedule schedule;
 
-    @Column(name = "nameCurso")
-    private String nameCurso;
-
-    @Column(name = "horario")
-    private String horario;
-
-    @Column(name = "numSesion")
-    private String numSesion;
-
-    @Column(name = "enabled")
-    private Boolean enabled = true;
-
+    // Estado (Disponible, Ocupado, etc.)
     @ManyToOne
     @JoinColumn(name = "status_id")
     private Status status;
+
+    // Habilitado o no
+    private Boolean enabled = true;
 }
