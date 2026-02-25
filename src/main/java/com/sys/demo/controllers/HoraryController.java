@@ -103,4 +103,11 @@ public class HoraryController {
     public String getCurrentShift() {
         return horaryService.getCurrentShift();
     }
+
+    @PostMapping
+    public ResponseEntity<Horary> crear(@RequestBody Horary datos) {
+        Horary nuevo = horaryService.crear(datos);
+        return ResponseEntity.ok(nuevo);
+    }
+
 }

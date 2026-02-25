@@ -23,4 +23,6 @@ public interface HoraryService {
     List<Horary> listarPorClassroom(Long classroomId); // 🔹 nuevo
 
     String getCurrentShift();
+
+    Horary crear(Horary datos);
 }

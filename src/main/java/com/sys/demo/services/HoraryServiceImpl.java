@@ -129,4 +129,30 @@ public class HoraryServiceImpl implements HoraryService {
             return "TARDE";
         return "NOCHE";
     }
+
+    @Override
+    public Horary crear(Horary datos) {
+        Classroom classroom = classroomRepository.findById(datos.getClassroom().getId())
+                .orElseThrow(() -> new RuntimeException("Classroom no encontrado"));
+
+        Schedule schedule = scheduleRepository.findById(datos.getSchedule().getId())
+                .orElseThrow(() -> new RuntimeException("Schedule no encontrado"));
+
+        Status status = statusRepository.findById(datos.getStatus().getId())
+                .orElseThrow(() -> new RuntimeException("Estado no encontrado"));
+
+        Horary nuevo = new Horary();
+        nuevo.setClassroom(classroom);
+        nuevo.setSchedule(schedule);
+        nuevo.setStatus(status);
+        nuevo.setEnabled(datos.getEnabled());
+
+        Horary guardado = horaryRepository.save(nuevo);
+
+        // 🔔 Notificar creación
+        webSocketService.enviarActualizacionHorario("CREATE", guardado.getId());
+
+        return guardado;
+    }
+
 }
