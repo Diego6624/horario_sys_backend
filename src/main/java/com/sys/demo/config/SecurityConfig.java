@@ -14,61 +14,61 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Bean
+        SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-                .cors(cors -> {
-                })
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(
-                        SessionCreationPolicy.STATELESS))
+                http
+                                .cors(cors -> {
+                                })
+                                .csrf(csrf -> csrf.disable())
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
+                                                // ✅ PERMITIR PREFLIGHT
+                                                .requestMatchers(
+                                                                org.springframework.http.HttpMethod.OPTIONS,
+                                                                "/**")
+                                                .permitAll()
 
-                        // ✅ PERMITIR PREFLIGHT
-                        .requestMatchers(
-                                org.springframework.http.HttpMethod.OPTIONS,
-                                "/**")
-                        .permitAll()
+                                                // AUTH
+                                                .requestMatchers("/api/auth/**").permitAll()
 
-                        // AUTH
-                        .requestMatchers("/api/auth/**").permitAll()
+                                                // HORARIOS
+                                                .requestMatchers("/api/horaries/**").permitAll()
+                                                .requestMatchers("/api/classrooms/**").permitAll()
+                                                .requestMatchers("/api/schedules/**").permitAll()
+                                                .requestMatchers("/status/**").permitAll()
+                                                .requestMatchers("/all/**").permitAll()
 
-                        // HORARIOS
-                        .requestMatchers("/api/horaries/**").permitAll()
-                        .requestMatchers("/status/**").permitAll()
-                        .requestMatchers("/all/**").permitAll()
+                                                // WEBSOCKET
+                                                .requestMatchers("/ws-horarios/**").permitAll()
+                                                .requestMatchers("/topic/**").permitAll()
+                                                .requestMatchers("/app/**").permitAll()
 
+                                                // SWAGGER
+                                                .requestMatchers(
+                                                                "/swagger-ui/**",
+                                                                "/v3/api-docs/**",
+                                                                "/swagger-ui.html")
+                                                .permitAll()
 
-                        // WEBSOCKET
-                        .requestMatchers("/ws-horarios/**").permitAll()
-                        .requestMatchers("/topic/**").permitAll()
-                        .requestMatchers("/app/**").permitAll()
+                                                // ✅ ENDPOINT DE SALUD PARA CRON-JOB
+                                                .requestMatchers("/ping").permitAll()
 
-                        // SWAGGER
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html")
-                        .permitAll()
+                                                .anyRequest().authenticated())
 
-                        // ✅ ENDPOINT DE SALUD PARA CRON-JOB
-                        .requestMatchers("/ping").permitAll()
+                                .formLogin(form -> form.disable())
+                                .httpBasic(basic -> basic.disable());
 
-                        .anyRequest().authenticated())
+                return http.build();
+        }
 
-                .formLogin(form -> form.disable())
-                .httpBasic(basic -> basic.disable());
-
-        return http.build();
-    }
-
-    // ===============================
-    // 🔐 Encoder
-    // ===============================
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        // ===============================
+        // 🔐 Encoder
+        // ===============================
+        @Bean
+        PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }
