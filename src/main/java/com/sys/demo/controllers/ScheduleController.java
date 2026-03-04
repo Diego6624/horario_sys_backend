@@ -4,16 +4,14 @@ import java.time.DayOfWeek;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import com.sys.demo.dto.ScheduleDTO;
+import com.sys.demo.entities.Horary;
 import com.sys.demo.entities.Schedule;
-import com.sys.demo.repositories.ScheduleRepository;
+import com.sys.demo.services.HoraryService;
+import com.sys.demo.services.ScheduleService;
 
 @RestController
 @RequestMapping("/api/schedules")
@@ -21,21 +19,31 @@ import com.sys.demo.repositories.ScheduleRepository;
 public class ScheduleController {
 
     @Autowired
-    private ScheduleRepository scheduleRepository;
+    private ScheduleService scheduleService;
+
+    @Autowired
+    private HoraryService horaryService;
 
     @GetMapping
-    public List<Schedule> listar() {
-        return scheduleRepository.findAll();
+    public ResponseEntity<List<Horary>> listar() {
+        List<Horary> lista = horaryService.listarActivos();
+        return ResponseEntity.ok(lista);
     }
 
     @PostMapping
-    public Schedule crear(@RequestBody Schedule schedule) {
-        return scheduleRepository.save(schedule);
+    public ResponseEntity<Schedule> crear(@RequestBody ScheduleDTO dto) {
+        Schedule saved = scheduleService.createSchedule(dto);
+        return ResponseEntity.ok(saved);
     }
 
     @GetMapping("/day/{day}")
     public List<Schedule> listarPorDia(@PathVariable String day) {
         DayOfWeek dia = DayOfWeek.valueOf(day.toUpperCase());
-        return scheduleRepository.findByDayOfWeek(dia);
+        return scheduleService.getSchedulesByDay(dia);
+    }
+
+    @GetMapping("/classroom/{id}")
+    public List<Schedule> listarPorClassroom(@PathVariable Long id) {
+        return scheduleService.getSchedulesByClassroom(id);
     }
 }

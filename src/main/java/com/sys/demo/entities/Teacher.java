@@ -1,30 +1,21 @@
 package com.sys.demo.entities;
 
-import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 
-@Data
 @Entity
-@Table(name = "classroom")
-public class Classroom {
-
+@Table(name = "teacher")
+@Data
+public class Teacher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @Column(name = "name")
+    @Column(nullable = false)
     private String nombre;
-
-    @OneToMany(mappedBy = "classroom")
-    private List<Schedule> schedules;
-
 }

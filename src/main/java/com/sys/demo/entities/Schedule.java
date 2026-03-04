@@ -25,21 +25,22 @@ public class Schedule {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, name = "dayOfWeek")
+    @Column(nullable = false)
     private DayOfWeek dayOfWeek;
 
-    @Column(nullable = false, name = "startTime")
+    @Column(nullable = false)
     private LocalTime startTime;
 
-    @Column(nullable = false, name = "endTime")
+    @Column(nullable = false)
     private LocalTime endTime;
 
-    private String docente;
-    private String curso;
     private String sesion;
 
-    @ManyToOne
-    @JoinColumn(name = "classroom_id", nullable = false)
-    private Classroom classroom;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "course_id")
+    private Course course;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "classroom_id")
+    private Classroom classroom;
 }

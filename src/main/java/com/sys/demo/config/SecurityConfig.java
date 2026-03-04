@@ -26,9 +26,7 @@ public class SecurityConfig {
 
                                 .authorizeHttpRequests(auth -> auth
                                                 // ✅ PERMITIR PREFLIGHT
-                                                .requestMatchers(
-                                                                org.springframework.http.HttpMethod.OPTIONS,
-                                                                "/**")
+                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
                                                 .permitAll()
 
                                                 // AUTH
@@ -37,9 +35,10 @@ public class SecurityConfig {
                                                 // HORARIOS
                                                 .requestMatchers("/api/horaries/**").permitAll()
                                                 .requestMatchers("/api/classrooms/**").permitAll()
+                                                .requestMatchers("/api/courses/**").permitAll()
                                                 .requestMatchers("/api/schedules/**").permitAll()
-                                                .requestMatchers("/status/**").permitAll()
-                                                .requestMatchers("/all/**").permitAll()
+                                                .requestMatchers("/api/courses/**").permitAll()
+                                                .requestMatchers("/api/teachers/**").permitAll()
 
                                                 // WEBSOCKET
                                                 .requestMatchers("/ws-horarios/**").permitAll()
@@ -47,9 +46,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/app/**").permitAll()
 
                                                 // SWAGGER
-                                                .requestMatchers(
-                                                                "/swagger-ui/**",
-                                                                "/v3/api-docs/**",
+                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
                                                                 "/swagger-ui.html")
                                                 .permitAll()
 

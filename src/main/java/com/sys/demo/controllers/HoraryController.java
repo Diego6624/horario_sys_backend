@@ -1,6 +1,7 @@
 package com.sys.demo.controllers;
 
 import java.time.DayOfWeek;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.sys.demo.dto.HoraryViewDTO;
 import com.sys.demo.entities.Horary;
 import com.sys.demo.services.HoraryService;
 
@@ -108,6 +110,24 @@ public class HoraryController {
     public ResponseEntity<Horary> crear(@RequestBody Horary datos) {
         Horary nuevo = horaryService.crear(datos);
         return ResponseEntity.ok(nuevo);
+    }
+
+    @GetMapping("/current")
+    public ResponseEntity<List<HoraryViewDTO>> listarEstadoActual() {
+        List<Horary> horarios = horaryService.listarActivos();
+
+        List<HoraryViewDTO> respuesta = horarios.stream().map(h -> {
+            HoraryViewDTO dto = new HoraryViewDTO();
+            dto.setClassroom(h.getClassroom().getNombre());
+            dto.setTeacher(h.getSchedule().getCourse().getTeacher().getNombre());
+            dto.setCourse(h.getSchedule().getCourse().getNombre());
+            dto.setHorario(h.getSchedule().getStartTime() + " - " + h.getSchedule().getEndTime());
+            dto.setSesion(h.getSchedule().getSesion());
+            dto.setEstado(h.getStatus().getName()); // Libre / Ocupado
+            return dto;
+        }).toList();
+
+        return ResponseEntity.ok(respuesta);
     }
 
 }

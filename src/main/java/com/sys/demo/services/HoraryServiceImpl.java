@@ -42,7 +42,29 @@ public class HoraryServiceImpl implements HoraryService {
 
     @Override
     public List<Horary> listarActivos() {
-        return horaryRepository.findByEnabledTrue();
+        List<Horary> horarios = horaryRepository.findByEnabledTrue();
+
+        // Obtener los estados desde la BD
+        Status libre = statusRepository.findByName("Libre")
+                .orElseThrow(() -> new RuntimeException("Estado 'Libre' no encontrado"));
+        Status ocupado = statusRepository.findByName("Ocupado")
+                .orElseThrow(() -> new RuntimeException("Estado 'Ocupado' no encontrado"));
+
+        LocalTime now = LocalTime.now(ZoneId.of("America/Lima"));
+
+        // Recalcular estado dinámicamente
+        for (Horary h : horarios) {
+            LocalTime inicio = h.getSchedule().getStartTime();
+            LocalTime fin = h.getSchedule().getEndTime();
+
+            if (now.isAfter(inicio) && now.isBefore(fin)) {
+                h.setStatus(ocupado);
+            } else {
+                h.setStatus(libre);
+            }
+        }
+
+        return horarios;
     }
 
     @Override
