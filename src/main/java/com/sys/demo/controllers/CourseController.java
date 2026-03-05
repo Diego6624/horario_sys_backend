@@ -6,9 +6,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.sys.demo.dto.CourseDTO;
 import com.sys.demo.entities.Course;
-import com.sys.demo.entities.Teacher;
-import com.sys.demo.repositories.CourseRepository;
-import com.sys.demo.repositories.TeacherRepository;
 import com.sys.demo.services.CourseService;
 
 import java.util.List;
@@ -20,12 +17,6 @@ public class CourseController {
     @Autowired
     private CourseService courseService;
 
-    @Autowired
-    private TeacherRepository teacherRepository;
-
-    @Autowired
-    private CourseRepository courseRepository;
-
     // Listar todos los cursos
     @GetMapping
     public List<Course> getAllCourses() {
@@ -35,15 +26,8 @@ public class CourseController {
     // Crear un nuevo curso
     @PostMapping
     public ResponseEntity<Course> createCourse(@RequestBody CourseDTO dto) {
-        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
-                .orElseThrow(() -> new RuntimeException("Teacher not found"));
-
-        Course course = new Course();
-        course.setNombre(dto.getNombre());
-        course.setDuracionSemanas(dto.getDuracionSemanas());
-        course.setTeacher(teacher);
-
-        return ResponseEntity.ok(courseRepository.save(course));
+        Course course = courseService.createCourse(dto);
+        return ResponseEntity.ok(course);
     }
 
     // Obtener curso por ID

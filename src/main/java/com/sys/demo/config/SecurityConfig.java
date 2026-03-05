@@ -2,7 +2,7 @@ package com.sys.demo.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
@@ -14,58 +14,29 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
 
-        @Bean
-        SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> {})
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // ✅ Endpoints públicos
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/ping").permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
-                http
-                                .cors(cors -> {
-                                })
-                                .csrf(csrf -> csrf.disable())
-                                .sessionManagement(session -> session.sessionCreationPolicy(
-                                                SessionCreationPolicy.STATELESS))
+                // ✅ Todo lo demás requiere autenticación
+                .anyRequest().authenticated()
+            )
+            // ✅ Activar Basic Auth
+            .httpBasic(Customizer.withDefaults());
 
-                                .authorizeHttpRequests(auth -> auth
-                                                // ✅ PERMITIR PREFLIGHT
-                                                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
-                                                .permitAll()
+        return http.build();
+    }
 
-                                                // AUTH
-                                                .requestMatchers("/api/auth/**").permitAll()
-
-                                                // HORARIOS
-                                                .requestMatchers("/api/horaries/**").permitAll()
-                                                .requestMatchers("/api/classrooms/**").permitAll()
-                                                .requestMatchers("/api/courses/**").permitAll()
-                                                .requestMatchers("/api/schedules/**").permitAll()
-                                                .requestMatchers("/api/courses/**").permitAll()
-                                                .requestMatchers("/api/teachers/**").permitAll()
-
-                                                // WEBSOCKET
-                                                .requestMatchers("/ws-horarios/**").permitAll()
-                                                .requestMatchers("/topic/**").permitAll()
-                                                .requestMatchers("/app/**").permitAll()
-
-                                                // SWAGGER
-                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
-                                                                "/swagger-ui.html")
-                                                .permitAll()
-
-                                                // ✅ ENDPOINT DE SALUD PARA CRON-JOB
-                                                .requestMatchers("/ping").permitAll()
-
-                                                .anyRequest().authenticated())
-
-                                .formLogin(form -> form.disable())
-                                .httpBasic(basic -> basic.disable());
-
-                return http.build();
-        }
-
-        // ===============================
-        // 🔐 Encoder
-        // ===============================
-        @Bean
-        PasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder();
-        }
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }

@@ -15,30 +15,29 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
-@Data
+import jakarta.persistence.*;
+import lombok.Data;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+
 @Entity
 @Table(name = "schedule")
+@Data
 public class Schedule {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private DayOfWeek dayOfWeek;
 
-    @Column(nullable = false)
     private LocalTime startTime;
-
-    @Column(nullable = false)
     private LocalTime endTime;
-
     private String sesion;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "course_id")
-    private Course course;
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "classroom_id")
