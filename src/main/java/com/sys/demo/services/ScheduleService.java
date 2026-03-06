@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.sys.demo.dto.ScheduleDTO;
-import com.sys.demo.dto.SubjectViewDTO;
+import com.sys.demo.dto.ScheduleViewDTO;
 import com.sys.demo.entities.Classroom;
 import com.sys.demo.entities.Schedule;
 import com.sys.demo.entities.Subject;
@@ -78,12 +78,23 @@ public class ScheduleService {
         return "Libre";
     }
 
+    public ScheduleViewDTO toViewDTO(Schedule s) {
+        ScheduleViewDTO dto = new ScheduleViewDTO();
+        dto.setClassroom(s.getClassroom().getNombre());
+        dto.setTeacher(s.getSubject().getTeacher().getNombre());
+        dto.setCourse(s.getSubject().getCourse().getNombre());
+        dto.setHorario(s.getStartTime() + " - " + s.getEndTime());
+        dto.setSesion(s.getSesion());
+        dto.setEstado(calcularEstado(s));
+        return dto;
+    }
+
     // 🔹 Método para enviar estado actual al frontend
     public void notificarEstadoActual() {
         List<Schedule> schedules = scheduleRepository.findAll();
 
-        List<SubjectViewDTO> data = schedules.stream().map(s -> {
-            SubjectViewDTO dto = new SubjectViewDTO();
+        List<ScheduleViewDTO> data = schedules.stream().map(s -> {
+            ScheduleViewDTO dto = new ScheduleViewDTO();
             dto.setClassroom(s.getClassroom().getNombre());
             dto.setTeacher(s.getSubject().getTeacher().getNombre());
             dto.setCourse(s.getSubject().getCourse().getNombre());
@@ -95,4 +106,5 @@ public class ScheduleService {
 
         webSocketService.enviarEstadoActual(data);
     }
+
 }

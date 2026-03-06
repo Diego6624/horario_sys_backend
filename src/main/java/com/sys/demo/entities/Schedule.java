@@ -3,7 +3,6 @@ package com.sys.demo.entities;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -14,11 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
-
-import jakarta.persistence.*;
-import lombok.Data;
-import java.time.DayOfWeek;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "schedule")

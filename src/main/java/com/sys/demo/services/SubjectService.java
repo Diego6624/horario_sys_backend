@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.sys.demo.dto.SubjectDTO;
+import com.sys.demo.dto.SubjectViewDTO;
 import com.sys.demo.entities.Course;
 import com.sys.demo.entities.Subject;
 import com.sys.demo.entities.Teacher;
@@ -25,10 +26,12 @@ public class SubjectService {
     @Autowired
     private TeacherRepository teacherRepository;
 
+    // 📋 LISTAR TODOS LOS SUBJECTS
     public List<Subject> getAllSubjects() {
         return subjectRepository.findAll();
     }
 
+    // ✏️ CREAR SUBJECT (entrada con SubjectDTO)
     public Subject createSubject(SubjectDTO dto) {
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new RuntimeException("Course not found"));
@@ -43,13 +46,24 @@ public class SubjectService {
         return subjectRepository.save(subject);
     }
 
+    // 🔍 OBTENER SUBJECT POR ID
     public Subject getSubjectById(Long id) {
         return subjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
     }
 
+    // 🗑️ ELIMINAR SUBJECT
     public void deleteSubject(Long id) {
         Subject subject = getSubjectById(id);
         subjectRepository.delete(subject);
+    }
+
+    // 🔹 Mapper: convertir entidad Subject → SubjectViewDTO (salida)
+    public SubjectViewDTO toViewDTO(Subject s) {
+        SubjectViewDTO dto = new SubjectViewDTO();
+        dto.setTeacher(s.getTeacher().getNombre());
+        dto.setCourse(s.getCourse().getNombre());
+        dto.setDuracionSemanas(s.getDuracionSemanas());
+        return dto;
     }
 }
