@@ -3,19 +3,13 @@ package com.sys.demo.controllers;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
+import com.sys.demo.dto.ClassroomViewDTO;
 import com.sys.demo.entities.Classroom;
 import com.sys.demo.services.ClassroomService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 @RestController
 @RequestMapping("/api/classrooms")
@@ -26,8 +20,8 @@ public class ClassroomController {
     private ClassroomService classroomService;
 
     @GetMapping
-    public List<Classroom> listar() {
-        return classroomService.getAllClassrooms();
+    public ResponseEntity<List<ClassroomViewDTO>> listar() {
+        return ResponseEntity.ok(classroomService.getAllClassrooms());
     }
 
     @PostMapping

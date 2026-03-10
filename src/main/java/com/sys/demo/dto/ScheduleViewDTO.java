@@ -4,10 +4,12 @@ import lombok.Data;
 
 @Data
 public class ScheduleViewDTO {
-    private String classroom;
-    private String teacher;
-    private String course;
-    private String horario;
+    private Long id;
+    private String dayOfWeek;
+    private String startTime;
+    private String endTime;
     private String sesion;
-    private String estado;
+    private String classroom;
+    private String course;
+    private String teacher;
 }

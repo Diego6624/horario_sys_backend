@@ -31,10 +31,12 @@ public class ScheduleService {
     @Autowired
     private WebSocketService webSocketService;
 
+    // 📋 LISTAR TODOS
     public List<Schedule> getAllSchedules() {
         return scheduleRepository.findAll();
     }
 
+    // ✏️ CREAR
     public Schedule createSchedule(ScheduleDTO dto) {
         Subject subject = subjectRepository.findById(dto.getSubjectId())
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
@@ -58,6 +60,7 @@ public class ScheduleService {
         return saved;
     }
 
+    // 🔍 FILTROS
     public List<Schedule> getSchedulesByDay(DayOfWeek day) {
         return scheduleRepository.findByDayOfWeek(day);
     }
@@ -70,6 +73,7 @@ public class ScheduleService {
         return scheduleRepository.findBySubjectId(subjectId);
     }
 
+    // 📊 Estado actual
     public String calcularEstado(Schedule s) {
         LocalTime ahora = LocalTime.now();
         if (ahora.isAfter(s.getStartTime()) && ahora.isBefore(s.getEndTime())) {
@@ -78,33 +82,28 @@ public class ScheduleService {
         return "Libre";
     }
 
+    // 🔹 Mapper limpio
     public ScheduleViewDTO toViewDTO(Schedule s) {
         ScheduleViewDTO dto = new ScheduleViewDTO();
-        dto.setClassroom(s.getClassroom().getNombre());
-        dto.setTeacher(s.getSubject().getTeacher().getNombre());
-        dto.setCourse(s.getSubject().getCourse().getNombre());
-        dto.setHorario(s.getStartTime() + " - " + s.getEndTime());
+        dto.setId(s.getId());
+        dto.setDayOfWeek(s.getDayOfWeek().toString());
+        dto.setStartTime(s.getStartTime().toString());
+        dto.setEndTime(s.getEndTime().toString());
         dto.setSesion(s.getSesion());
-        dto.setEstado(calcularEstado(s));
+        dto.setClassroom(s.getClassroom().getNombre());
+        dto.setCourse(s.getSubject().getCourse().getNombre());
+        dto.setTeacher(s.getSubject().getTeacher().getNombre());
         return dto;
     }
 
-    // 🔹 Método para enviar estado actual al frontend
+    // 🔔 Notificar estado actual vía WebSocket
     public void notificarEstadoActual() {
         List<Schedule> schedules = scheduleRepository.findAll();
 
-        List<ScheduleViewDTO> data = schedules.stream().map(s -> {
-            ScheduleViewDTO dto = new ScheduleViewDTO();
-            dto.setClassroom(s.getClassroom().getNombre());
-            dto.setTeacher(s.getSubject().getTeacher().getNombre());
-            dto.setCourse(s.getSubject().getCourse().getNombre());
-            dto.setHorario(s.getStartTime() + " - " + s.getEndTime());
-            dto.setSesion(s.getSesion());
-            dto.setEstado(calcularEstado(s));
-            return dto;
-        }).toList();
+        List<ScheduleViewDTO> data = schedules.stream()
+                .map(this::toViewDTO)
+                .toList();
 
         webSocketService.enviarEstadoActual(data);
     }
-
 }

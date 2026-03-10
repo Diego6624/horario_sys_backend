@@ -17,20 +17,25 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> {})
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // ✅ Endpoints públicos
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/ping").permitAll()
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                .cors(cors -> {
+                })
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/ping").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
-                // ✅ Todo lo demás requiere autenticación
-                .anyRequest().authenticated()
-            )
-            // ✅ Activar Basic Auth
-            .httpBasic(Customizer.withDefaults());
+                        // 👇 abrir los horarios públicos
+                        .requestMatchers("/api/schedules/current").permitAll()
+                        .requestMatchers("/ws-horarios/**").permitAll()
+
+                        // Todo lo demás requiere autenticación
+                        .anyRequest().authenticated())
+
+                // ✅ Activar Basic Auth
+                .httpBasic(Customizer.withDefaults());
 
         return http.build();
     }

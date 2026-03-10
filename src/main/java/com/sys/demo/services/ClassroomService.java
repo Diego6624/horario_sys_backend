@@ -3,6 +3,7 @@ package com.sys.demo.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.sys.demo.dto.ClassroomViewDTO;
 import com.sys.demo.entities.Classroom;
 import com.sys.demo.repositories.ClassroomRepository;
 
@@ -14,8 +15,15 @@ public class ClassroomService {
     @Autowired
     private ClassroomRepository classroomRepository;
 
-    public List<Classroom> getAllClassrooms() {
-        return classroomRepository.findAll();
+    public List<ClassroomViewDTO> getAllClassrooms() {
+        return classroomRepository.findAll().stream()
+                .map(c -> {
+                    ClassroomViewDTO dto = new ClassroomViewDTO();
+                    dto.setId(c.getId());
+                    dto.setNombre(c.getNombre());
+                    return dto;
+                })
+                .toList();
     }
 
     public Classroom createClassroom(Classroom classroom) {

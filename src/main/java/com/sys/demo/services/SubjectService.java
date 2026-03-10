@@ -61,9 +61,30 @@ public class SubjectService {
     // 🔹 Mapper: convertir entidad Subject → SubjectViewDTO (salida)
     public SubjectViewDTO toViewDTO(Subject s) {
         SubjectViewDTO dto = new SubjectViewDTO();
-        dto.setTeacher(s.getTeacher().getNombre());
+        dto.setId(s.getId());
+        dto.setCourseId(s.getCourse().getId());
         dto.setCourse(s.getCourse().getNombre());
+        dto.setTeacherId(s.getTeacher().getId());
+        dto.setTeacher(s.getTeacher().getNombre());
         dto.setDuracionSemanas(s.getDuracionSemanas());
         return dto;
     }
+
+    // ✏️ ACTUALIZAR SUBJECT
+    public Subject updateSubject(Long id, SubjectDTO dto) {
+        Subject subject = subjectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+
+        Course course = courseRepository.findById(dto.getCourseId())
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+        subject.setCourse(course);
+        subject.setTeacher(teacher);
+        subject.setDuracionSemanas(dto.getDuracionSemanas());
+
+        return subjectRepository.save(subject);
+    }
+
 }

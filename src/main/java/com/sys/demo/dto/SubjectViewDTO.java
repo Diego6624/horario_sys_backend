@@ -4,7 +4,10 @@ import lombok.Data;
 
 @Data
 public class SubjectViewDTO {
-    private String teacher;
+    private Long id;
+    private Long courseId;
     private String course;
+    private Long teacherId;
+    private String teacher;
     private Integer duracionSemanas;
 }

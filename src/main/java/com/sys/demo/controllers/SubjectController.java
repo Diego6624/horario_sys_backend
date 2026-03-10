@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,6 +45,14 @@ public class SubjectController {
     public ResponseEntity<SubjectViewDTO> getSubject(@PathVariable Long id) {
         Subject subject = subjectService.getSubjectById(id);
         return ResponseEntity.ok(subjectService.toViewDTO(subject));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<SubjectViewDTO> updateSubject(
+            @PathVariable Long id,
+            @RequestBody SubjectDTO dto) {
+        Subject updated = subjectService.updateSubject(id, dto);
+        return ResponseEntity.ok(subjectService.toViewDTO(updated));
     }
 
     @DeleteMapping("/{id}")
