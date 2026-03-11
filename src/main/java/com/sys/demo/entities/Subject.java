@@ -1,5 +1,8 @@
 package com.sys.demo.entities;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,4 +23,10 @@ public class Subject {
     private Teacher teacher;
 
     private Integer duracionSemanas;
+
+    @Column(name = "fecha_inicio")
+    private LocalDate fechaInicio;
+
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Schedule> schedules;
 }
