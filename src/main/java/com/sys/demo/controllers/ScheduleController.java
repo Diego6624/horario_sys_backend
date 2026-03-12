@@ -55,9 +55,7 @@ public class ScheduleController {
 
     @GetMapping("/current")
     public ResponseEntity<List<ScheduleViewDTO>> listarEstadoActual() {
-        List<ScheduleViewDTO> respuesta = scheduleService.getAllSchedules().stream()
-                .map(scheduleService::toViewDTO)
-                .toList();
+        List<ScheduleViewDTO> respuesta = scheduleService.getCurrentSchedules();
         return ResponseEntity.ok(respuesta);
     }
 }

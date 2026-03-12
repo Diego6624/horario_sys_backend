@@ -9,5 +9,6 @@ public class SubjectSessionMultiDTO {
     private Long teacherId;
     private Long courseId;
     private Integer duracionSemanas;
+    private String modulo;
     private List<ScheduleDTO> schedules;
 }

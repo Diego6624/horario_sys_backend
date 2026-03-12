@@ -24,6 +24,8 @@ public class Subject {
 
     private Integer duracionSemanas;
 
+    private String modulo;
+
     @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
 

@@ -64,7 +64,7 @@ public class SubjectSessionService {
         return subject;
     }
 
-    // 🔹 Flujo 2: crear subject con múltiples horarios distintos repetidos por semanas
+    // Flujo 2: crear subject con múltiples horarios distintos repetidos por semanas
     public Subject createSubjectWithMultipleSchedules(SubjectSessionMultiDTO dto) {
         Teacher teacher = teacherRepo.findById(dto.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
@@ -75,31 +75,31 @@ public class SubjectSessionService {
         subject.setTeacher(teacher);
         subject.setCourse(course);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
+        subject.setModulo(dto.getModulo()); // 🔹 nuevo campo
         subject.setFechaInicio(LocalDate.now());
         subjectRepo.save(subject);
 
-        for (ScheduleDTO schDto : dto.getSchedules()) {
-            Classroom classroom = classroomRepo.findById(schDto.getClassroomId())
-                    .orElseThrow(() -> new RuntimeException("Classroom not found"));
+        int sesionCounter = 1; // contador global de sesiones
 
-            DayOfWeek dia = DayOfWeek.valueOf(schDto.getDayOfWeek().toUpperCase());
-            LocalTime inicio = LocalTime.parse(schDto.getStartTime());
-            LocalTime fin = LocalTime.parse(schDto.getEndTime());
+        for (int i = 0; i < dto.getDuracionSemanas(); i++) {
+            for (ScheduleDTO schDto : dto.getSchedules()) {
+                Classroom classroom = classroomRepo.findById(schDto.getClassroomId())
+                        .orElseThrow(() -> new RuntimeException("Classroom not found"));
 
-            // 🔁 Repetir cada horario por todas las semanas
-            for (int i = 0; i < dto.getDuracionSemanas(); i++) {
                 Schedule schedule = new Schedule();
                 schedule.setSubject(subject);
                 schedule.setClassroom(classroom);
-                schedule.setDayOfWeek(dia);
-                schedule.setStartTime(inicio);
-                schedule.setEndTime(fin);
-                schedule.setSesion("Semana " + (i + 1) + " - " + schDto.getSesion());
+                schedule.setDayOfWeek(DayOfWeek.valueOf(schDto.getDayOfWeek().toUpperCase()));
+                schedule.setStartTime(LocalTime.parse(schDto.getStartTime()));
+                schedule.setEndTime(LocalTime.parse(schDto.getEndTime()));
+
+                // 🔁 asignar automáticamente módulo + sesión
+                schedule.setSesion(subject.getModulo() + " - S" + String.format("%02d", sesionCounter));
+                sesionCounter++;
 
                 scheduleRepo.save(schedule);
             }
         }
-
         return subject;
     }
 }
