@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.sys.demo.dto.ScheduleDTO;
 import com.sys.demo.dto.ScheduleViewDTO;
-import com.sys.demo.entities.Schedule;
 import com.sys.demo.services.ScheduleService;
 
 @RestController
@@ -23,36 +22,49 @@ public class ScheduleController {
     // 📺 LISTAR TODOS LOS HORARIOS (DTO limpio)
     @GetMapping
     public ResponseEntity<List<ScheduleViewDTO>> listar() {
-        List<Schedule> lista = scheduleService.getAllSchedules();
-        List<ScheduleViewDTO> respuesta = lista.stream()
-                .map(scheduleService::toViewDTO)
-                .toList();
+        List<ScheduleViewDTO> respuesta = scheduleService.getAllSchedules();
         return ResponseEntity.ok(respuesta);
     }
 
+    // ✏️ CREAR HORARIO
     @PostMapping
     public ResponseEntity<ScheduleViewDTO> crear(@RequestBody ScheduleDTO dto) {
-        Schedule saved = scheduleService.createSchedule(dto);
+        var saved = scheduleService.createSchedule(dto);
         return ResponseEntity.ok(scheduleService.toViewDTO(saved));
     }
 
+    // 🔍 FILTRAR POR DÍA
     @GetMapping("/day/{day}")
     public ResponseEntity<List<ScheduleViewDTO>> listarPorDia(@PathVariable String day) {
         DayOfWeek dia = DayOfWeek.valueOf(day.toUpperCase());
-        List<ScheduleViewDTO> respuesta = scheduleService.getSchedulesByDay(dia).stream()
+        List<ScheduleViewDTO> respuesta = scheduleService.getSchedulesByDay(dia)
+                .stream()
                 .map(scheduleService::toViewDTO)
                 .toList();
         return ResponseEntity.ok(respuesta);
     }
 
+    // 🔍 FILTRAR POR AULA
     @GetMapping("/classroom/{id}")
     public ResponseEntity<List<ScheduleViewDTO>> listarPorClassroom(@PathVariable Long id) {
-        List<ScheduleViewDTO> respuesta = scheduleService.getSchedulesByClassroom(id).stream()
+        List<ScheduleViewDTO> respuesta = scheduleService.getSchedulesByClassroom(id)
+                .stream()
                 .map(scheduleService::toViewDTO)
                 .toList();
         return ResponseEntity.ok(respuesta);
     }
 
+    // 🔍 FILTRAR POR MATERIA
+    @GetMapping("/subject/{id}")
+    public ResponseEntity<List<ScheduleViewDTO>> listarPorSubject(@PathVariable Long id) {
+        List<ScheduleViewDTO> respuesta = scheduleService.getSchedulesBySubject(id)
+                .stream()
+                .map(scheduleService::toViewDTO)
+                .toList();
+        return ResponseEntity.ok(respuesta);
+    }
+
+    // 📊 ESTADO ACTUAL
     @GetMapping("/current")
     public ResponseEntity<List<ScheduleViewDTO>> listarEstadoActual() {
         List<ScheduleViewDTO> respuesta = scheduleService.getCurrentSchedules();

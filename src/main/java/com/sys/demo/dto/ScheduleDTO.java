@@ -10,4 +10,5 @@ public class ScheduleDTO {
     private String sesion;
     private Long classroomId;
     private Long subjectId;
+    private String date;
 }

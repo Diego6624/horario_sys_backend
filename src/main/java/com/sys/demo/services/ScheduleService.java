@@ -3,9 +3,13 @@ package com.sys.demo.services;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.sys.demo.dto.ScheduleDTO;
@@ -33,8 +37,11 @@ public class ScheduleService {
     private WebSocketService webSocketService;
 
     // 📋 LISTAR TODOS
-    public List<Schedule> getAllSchedules() {
-        return scheduleRepository.findAll();
+    public List<ScheduleViewDTO> getAllSchedules() {
+        return scheduleRepository.findAll()
+                .stream()
+                .map(this::toViewDTO)
+                .toList();
     }
 
     // ✏️ CREAR
@@ -46,7 +53,23 @@ public class ScheduleService {
                 .orElseThrow(() -> new RuntimeException("Classroom not found"));
 
         Schedule schedule = new Schedule();
-        schedule.setDayOfWeek(DayOfWeek.valueOf(dto.getDayOfWeek().toUpperCase()));
+
+        // Si viene date, usarlo. Si no, calcular en base a dayOfWeek
+        if (dto.getDate() != null && !dto.getDate().isBlank()) {
+            LocalDate parsedDate = LocalDate.parse(dto.getDate());
+            schedule.setDate(parsedDate);
+            schedule.setDayOfWeek(parsedDate.getDayOfWeek());
+        } else {
+            if (dto.getDayOfWeek() == null || dto.getDayOfWeek().isBlank()) {
+                throw new RuntimeException("Debe especificar dayOfWeek o date");
+            }
+            DayOfWeek day = DayOfWeek.valueOf(dto.getDayOfWeek().toUpperCase());
+            LocalDate today = LocalDate.now();
+            LocalDate nextDate = today.with(java.time.temporal.TemporalAdjusters.nextOrSame(day));
+            schedule.setDayOfWeek(day);
+            schedule.setDate(nextDate);
+        }
+
         schedule.setStartTime(LocalTime.parse(dto.getStartTime()));
         schedule.setEndTime(LocalTime.parse(dto.getEndTime()));
         schedule.setSesion(dto.getSesion());
@@ -57,7 +80,7 @@ public class ScheduleService {
 
         // 🔔 Notificar al frontend
         notificarEstadoActual();
-
+        System.out.println("DTO date: " + dto.getDate());
         return saved;
     }
 
@@ -83,32 +106,44 @@ public class ScheduleService {
         return "Libre";
     }
 
-    // 🔹 Mapper limpio
-    // 🔹 Mapper limpio
+    // 🔹 Mapper limpio con validaciones
     public ScheduleViewDTO toViewDTO(Schedule s) {
         ScheduleViewDTO dto = new ScheduleViewDTO();
         dto.setId(s.getId());
-        dto.setDayOfWeek(s.getDayOfWeek().toString());
-        dto.setStartTime(s.getStartTime().toString());
-        dto.setEndTime(s.getEndTime().toString());
-        dto.setSesion(s.getSesion());
-        dto.setClassroom(s.getClassroom().getNombre());
-        dto.setCourse(s.getSubject().getCourse().getNombre());
-        dto.setTeacher(s.getSubject().getTeacher().getNombre());
 
-        // 🔹 Calcular turno según hora de inicio
-        LocalTime inicio = s.getStartTime();
-        String turno;
-        if (inicio.isBefore(LocalTime.of(12, 0))) {
-            turno = "Mañana";
-        } else if (inicio.isBefore(LocalTime.of(18, 0))) {
-            turno = "Tarde";
-        } else {
-            turno = "Noche";
-        }
-        dto.setTurno(turno);
+        // Fecha
+        dto.setDate(s.getDate() != null
+                ? s.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE)
+                : "");
 
-        // 🔹 Calcular estado actual
+        // Día de la semana
+        dto.setDayOfWeek(s.getDayOfWeek() != null
+                ? s.getDayOfWeek().getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase()
+                : "");
+
+        // Horas
+        dto.setStartTime(s.getStartTime() != null ? s.getStartTime().toString() : "");
+        dto.setEndTime(s.getEndTime() != null ? s.getEndTime().toString() : "");
+
+        // Sesión
+        dto.setSesion(s.getSesion() != null ? s.getSesion() : "");
+
+        // Aula
+        dto.setClassroom(s.getClassroom() != null ? s.getClassroom().getNombre() : "");
+
+        // Curso y docente
+        dto.setCourse(s.getSubject() != null && s.getSubject().getCourse() != null
+                ? s.getSubject().getCourse().getNombre()
+                : "");
+
+        dto.setTeacher(s.getSubject() != null && s.getSubject().getTeacher() != null
+                ? s.getSubject().getTeacher().getNombre()
+                : "");
+
+        // Turno
+        dto.setTurno(s.getStartTime() != null ? calcularTurno(s.getStartTime()) : "");
+
+        // Estado
         dto.setEstado(calcularEstado(s));
 
         return dto;
@@ -120,6 +155,11 @@ public class ScheduleService {
         webSocketService.enviarEstadoActual(data);
     }
 
+    @Scheduled(fixedRate = 60000) // cada minuto
+    public void notificarCadaMinuto() {
+        notificarEstadoActual();
+    }
+
     public List<ScheduleViewDTO> getCurrentSchedules() {
         LocalTime ahora = LocalTime.now();
         DayOfWeek hoy = LocalDate.now().getDayOfWeek();
@@ -128,20 +168,19 @@ public class ScheduleService {
         List<Schedule> schedulesHoy = scheduleRepository.findByDayOfWeek(hoy);
 
         return aulas.stream().map(aula -> {
-            // Buscar si hay un horario activo en esta aula
             Schedule s = schedulesHoy.stream()
                     .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
-                    // 🔹 Solo si la clase está en curso ahora mismo
                     .filter(sc -> ahora.isAfter(sc.getStartTime()) && ahora.isBefore(sc.getEndTime()))
                     .findFirst()
                     .orElse(null);
 
             ScheduleViewDTO dto = new ScheduleViewDTO();
             dto.setClassroom(aula.getNombre());
+            dto.setDate(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            dto.setDayOfWeek(hoy.getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase());
 
             if (s != null) {
                 dto.setId(s.getId());
-                dto.setDayOfWeek(s.getDayOfWeek().toString());
                 dto.setStartTime(s.getStartTime().toString());
                 dto.setEndTime(s.getEndTime().toString());
                 dto.setSesion(s.getSesion());
@@ -150,7 +189,6 @@ public class ScheduleService {
                 dto.setTurno(calcularTurno(s.getStartTime()));
                 dto.setEstado("En clase");
             } else {
-                // Aula libre sin clase activa
                 dto.setEstado("Libre");
                 dto.setCourse("");
                 dto.setTeacher("");
@@ -174,5 +212,4 @@ public class ScheduleService {
             return "Noche";
         }
     }
-
 }

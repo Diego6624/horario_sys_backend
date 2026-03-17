@@ -1,6 +1,7 @@
 package com.sys.demo.entities;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import jakarta.persistence.Entity;
@@ -28,7 +29,8 @@ public class Schedule {
     private LocalTime startTime;
     private LocalTime endTime;
     private String sesion;
-
+    private LocalDate date;
+    
     @ManyToOne(optional = false)
     @JoinColumn(name = "subject_id")
     private Subject subject;

@@ -10,4 +10,6 @@ public class SubjectViewDTO {
     private Long teacherId;
     private String teacher;
     private Integer duracionSemanas;
+    private String modulo;
+    private String fechaInicio;
 }

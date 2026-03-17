@@ -11,26 +11,27 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 
 @Service
 public class SubjectSessionService {
 
-    @Autowired
+    @Autowired 
     private SubjectRepository subjectRepo;
 
-    @Autowired
+    @Autowired 
     private TeacherRepository teacherRepo;
 
-    @Autowired
+    @Autowired 
     private CourseRepository courseRepo;
 
-    @Autowired
+    @Autowired 
     private ClassroomRepository classroomRepo;
 
-    @Autowired
+    @Autowired 
     private ScheduleRepository scheduleRepo;
 
-    // 🔹 Flujo 1: crear subject con un solo horario repetido por semanas
+    // Flujo 1: un solo horario repetido por semanas
     public Subject createSubjectWithSchedules(SubjectSessionDTO dto) {
         Teacher teacher = teacherRepo.findById(dto.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
@@ -51,20 +52,25 @@ public class SubjectSessionService {
         LocalTime fin = LocalTime.parse(dto.getEndTime());
 
         for (int i = 0; i < dto.getDuracionSemanas(); i++) {
+            LocalDate baseWeek = subject.getFechaInicio().plusWeeks(i);
+            LocalDate dateForWeek = baseWeek.with(TemporalAdjusters.nextOrSame(dia));
+
             Schedule schedule = new Schedule();
             schedule.setSubject(subject);
             schedule.setClassroom(classroom);
             schedule.setDayOfWeek(dia);
+            schedule.setDate(dateForWeek);
             schedule.setStartTime(inicio);
             schedule.setEndTime(fin);
             schedule.setSesion("Semana " + (i + 1));
+
             scheduleRepo.save(schedule);
         }
 
         return subject;
     }
 
-    // Flujo 2: crear subject con múltiples horarios distintos repetidos por semanas
+    // Flujo 2: múltiples horarios distintos repetidos por semanas
     public Subject createSubjectWithMultipleSchedules(SubjectSessionMultiDTO dto) {
         Teacher teacher = teacherRepo.findById(dto.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
@@ -75,31 +81,35 @@ public class SubjectSessionService {
         subject.setTeacher(teacher);
         subject.setCourse(course);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
-        subject.setModulo(dto.getModulo()); // 🔹 nuevo campo
         subject.setFechaInicio(LocalDate.now());
         subjectRepo.save(subject);
 
-        int sesionCounter = 1; // contador global de sesiones
+        int sesionCounter = 1;
 
         for (int i = 0; i < dto.getDuracionSemanas(); i++) {
+            LocalDate baseWeek = subject.getFechaInicio().plusWeeks(i);
+
             for (ScheduleDTO schDto : dto.getSchedules()) {
                 Classroom classroom = classroomRepo.findById(schDto.getClassroomId())
                         .orElseThrow(() -> new RuntimeException("Classroom not found"));
 
+                DayOfWeek dow = DayOfWeek.valueOf(schDto.getDayOfWeek().toUpperCase());
+                LocalDate dateForWeek = baseWeek.with(TemporalAdjusters.nextOrSame(dow));
+
                 Schedule schedule = new Schedule();
                 schedule.setSubject(subject);
                 schedule.setClassroom(classroom);
-                schedule.setDayOfWeek(DayOfWeek.valueOf(schDto.getDayOfWeek().toUpperCase()));
+                schedule.setDayOfWeek(dow);
+                schedule.setDate(dateForWeek);
                 schedule.setStartTime(LocalTime.parse(schDto.getStartTime()));
                 schedule.setEndTime(LocalTime.parse(schDto.getEndTime()));
-
-                // 🔁 asignar automáticamente módulo + sesión
-                schedule.setSesion(subject.getModulo() + " - S" + String.format("%02d", sesionCounter));
+                schedule.setSesion("S" + String.format("%02d", sesionCounter));
                 sesionCounter++;
 
                 scheduleRepo.save(schedule);
             }
         }
+
         return subject;
     }
 }

@@ -14,4 +14,5 @@ public class ScheduleViewDTO {
     private String teacher;
     private String turno;
     private String estado;
+    private String date;
 }

@@ -26,12 +26,24 @@ public class SubjectService {
     @Autowired
     private TeacherRepository teacherRepository;
 
-    // 📋 LISTAR TODOS LOS SUBJECTS
     public List<Subject> getAllSubjects() {
         return subjectRepository.findAll();
     }
 
-    // ✏️ CREAR SUBJECT (entrada con SubjectDTO)
+    public SubjectViewDTO toViewDTO(Subject s) {
+        SubjectViewDTO dto = new SubjectViewDTO();
+        dto.setId(s.getId());
+        dto.setCourseId(s.getCourse().getId());
+        dto.setCourse(s.getCourse().getNombre());
+        dto.setTeacherId(s.getTeacher().getId());
+        dto.setTeacher(s.getTeacher().getNombre());
+        dto.setDuracionSemanas(s.getDuracionSemanas());
+        dto.setModulo(s.getModulo());
+        dto.setFechaInicio(s.getFechaInicio() != null ? s.getFechaInicio().toString() : null);
+
+        return dto;
+    }
+
     public Subject createSubject(SubjectDTO dto) {
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new RuntimeException("Course not found"));
@@ -46,31 +58,16 @@ public class SubjectService {
         return subjectRepository.save(subject);
     }
 
-    // 🔍 OBTENER SUBJECT POR ID
     public Subject getSubjectById(Long id) {
         return subjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
     }
 
-    // 🗑️ ELIMINAR SUBJECT
     public void deleteSubject(Long id) {
         Subject subject = getSubjectById(id);
         subjectRepository.delete(subject);
     }
 
-    // 🔹 Mapper: convertir entidad Subject → SubjectViewDTO (salida)
-    public SubjectViewDTO toViewDTO(Subject s) {
-        SubjectViewDTO dto = new SubjectViewDTO();
-        dto.setId(s.getId());
-        dto.setCourseId(s.getCourse().getId());
-        dto.setCourse(s.getCourse().getNombre());
-        dto.setTeacherId(s.getTeacher().getId());
-        dto.setTeacher(s.getTeacher().getNombre());
-        dto.setDuracionSemanas(s.getDuracionSemanas());
-        return dto;
-    }
-
-    // ✏️ ACTUALIZAR SUBJECT
     public Subject updateSubject(Long id, SubjectDTO dto) {
         Subject subject = subjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
@@ -86,5 +83,4 @@ public class SubjectService {
 
         return subjectRepository.save(subject);
     }
-
 }
