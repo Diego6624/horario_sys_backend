@@ -1,11 +1,12 @@
 package com.sys.demo.services;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.sys.demo.dto.SubjectDTO;
+import com.sys.demo.dto.SubjectSessionMultiDTO;
 import com.sys.demo.dto.SubjectViewDTO;
 import com.sys.demo.entities.Course;
 import com.sys.demo.entities.Subject;
@@ -40,11 +41,11 @@ public class SubjectService {
         dto.setDuracionSemanas(s.getDuracionSemanas());
         dto.setModulo(s.getModulo());
         dto.setFechaInicio(s.getFechaInicio() != null ? s.getFechaInicio().toString() : null);
-
         return dto;
     }
 
-    public Subject createSubject(SubjectDTO dto) {
+    // 🚀 Crear usando SubjectSessionMultiDTO (sí tiene modulo)
+    public Subject createSubject(SubjectSessionMultiDTO dto) {
         Course course = courseRepository.findById(dto.getCourseId())
                 .orElseThrow(() -> new RuntimeException("Course not found"));
         Teacher teacher = teacherRepository.findById(dto.getTeacherId())
@@ -54,6 +55,8 @@ public class SubjectService {
         subject.setCourse(course);
         subject.setTeacher(teacher);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
+        subject.setModulo(dto.getModulo()); // ✅ ahora sí se guarda
+        subject.setFechaInicio(LocalDate.now()); // ✅ fecha de creación automática
 
         return subjectRepository.save(subject);
     }
@@ -68,7 +71,8 @@ public class SubjectService {
         subjectRepository.delete(subject);
     }
 
-    public Subject updateSubject(Long id, SubjectDTO dto) {
+    // 🔄 Actualizar usando SubjectSessionMultiDTO (sí tiene modulo)
+    public Subject updateSubject(Long id, SubjectSessionMultiDTO dto) {
         Subject subject = subjectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
 
@@ -80,6 +84,8 @@ public class SubjectService {
         subject.setCourse(course);
         subject.setTeacher(teacher);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
+        subject.setModulo(dto.getModulo());
+        subject.setFechaInicio(LocalDate.now()); // o dto.getFechaInicio() si lo mandas
 
         return subjectRepository.save(subject);
     }

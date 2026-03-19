@@ -30,7 +30,9 @@ public class Schedule {
     private LocalTime endTime;
     private String sesion;
     private LocalDate date;
-    
+
+    private String estado; // 👈 nuevo campo persistente
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "subject_id")
     private Subject subject;
@@ -39,3 +41,4 @@ public class Schedule {
     @JoinColumn(name = "classroom_id")
     private Classroom classroom;
 }
+

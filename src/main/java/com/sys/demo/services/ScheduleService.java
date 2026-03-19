@@ -75,6 +75,7 @@ public class ScheduleService {
         schedule.setSesion(dto.getSesion());
         schedule.setSubject(subject);
         schedule.setClassroom(classroom);
+        schedule.setEstado("Libre");
 
         Schedule saved = scheduleRepository.save(schedule);
 
@@ -82,6 +83,16 @@ public class ScheduleService {
         notificarEstadoActual();
         System.out.println("DTO date: " + dto.getDate());
         return saved;
+    }
+
+    public Schedule updateEstado(Long id, String nuevoEstado) {
+        var opt = scheduleRepository.findById(id);
+        if (opt.isEmpty())
+            return null;
+
+        Schedule schedule = opt.get();
+        schedule.setEstado(nuevoEstado);
+        return scheduleRepository.save(schedule);
     }
 
     // 🔍 FILTROS
@@ -144,7 +155,7 @@ public class ScheduleService {
         dto.setTurno(s.getStartTime() != null ? calcularTurno(s.getStartTime()) : "");
 
         // Estado
-        dto.setEstado(calcularEstado(s));
+        dto.setEstado(s.getEstado() != null ? s.getEstado() : calcularEstado(s));
 
         return dto;
     }

@@ -16,19 +16,19 @@ import java.time.temporal.TemporalAdjusters;
 @Service
 public class SubjectSessionService {
 
-    @Autowired 
+    @Autowired
     private SubjectRepository subjectRepo;
 
-    @Autowired 
+    @Autowired
     private TeacherRepository teacherRepo;
 
-    @Autowired 
+    @Autowired
     private CourseRepository courseRepo;
 
-    @Autowired 
+    @Autowired
     private ClassroomRepository classroomRepo;
 
-    @Autowired 
+    @Autowired
     private ScheduleRepository scheduleRepo;
 
     // Flujo 1: un solo horario repetido por semanas
@@ -81,6 +81,7 @@ public class SubjectSessionService {
         subject.setTeacher(teacher);
         subject.setCourse(course);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
+        subject.setModulo(dto.getModulo());
         subject.setFechaInicio(LocalDate.now());
         subjectRepo.save(subject);
 
@@ -109,7 +110,6 @@ public class SubjectSessionService {
                 scheduleRepo.save(schedule);
             }
         }
-
         return subject;
     }
 }

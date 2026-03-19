@@ -4,17 +4,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.sys.demo.dto.SubjectDTO;
+import com.sys.demo.dto.SubjectSessionMultiDTO;
 import com.sys.demo.dto.SubjectViewDTO;
 import com.sys.demo.entities.Subject;
 import com.sys.demo.services.SubjectService;
@@ -35,8 +27,9 @@ public class SubjectController {
         return ResponseEntity.ok(respuesta);
     }
 
+    // 🚀 Crear Subject con múltiples sesiones y módulo
     @PostMapping
-    public ResponseEntity<SubjectViewDTO> createSubject(@RequestBody SubjectDTO dto) {
+    public ResponseEntity<SubjectViewDTO> createSubject(@RequestBody SubjectSessionMultiDTO dto) {
         Subject saved = subjectService.createSubject(dto);
         return ResponseEntity.ok(subjectService.toViewDTO(saved));
     }
@@ -50,7 +43,7 @@ public class SubjectController {
     @PutMapping("/{id}")
     public ResponseEntity<SubjectViewDTO> updateSubject(
             @PathVariable Long id,
-            @RequestBody SubjectDTO dto) {
+            @RequestBody SubjectSessionMultiDTO dto) {
         Subject updated = subjectService.updateSubject(id, dto);
         return ResponseEntity.ok(subjectService.toViewDTO(updated));
     }

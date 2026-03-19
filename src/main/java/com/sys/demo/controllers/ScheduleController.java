@@ -2,6 +2,7 @@ package com.sys.demo.controllers;
 
 import java.time.DayOfWeek;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -70,4 +71,18 @@ public class ScheduleController {
         List<ScheduleViewDTO> respuesta = scheduleService.getCurrentSchedules();
         return ResponseEntity.ok(respuesta);
     }
+
+    // 🔄 ACTUALIZAR ESTADO DE UN HORARIO
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<ScheduleViewDTO> actualizarEstado(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        String nuevoEstado = body.get("estado");
+        var actualizado = scheduleService.updateEstado(id, nuevoEstado);
+        if (actualizado == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(scheduleService.toViewDTO(actualizado));
+    }
+
 }
