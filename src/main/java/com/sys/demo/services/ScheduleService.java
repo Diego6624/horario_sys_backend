@@ -54,7 +54,6 @@ public class ScheduleService {
 
         Schedule schedule = new Schedule();
 
-        // Si viene date, usarlo. Si no, calcular en base a dayOfWeek
         if (dto.getDate() != null && !dto.getDate().isBlank()) {
             LocalDate parsedDate = LocalDate.parse(dto.getDate());
             schedule.setDate(parsedDate);
@@ -79,20 +78,23 @@ public class ScheduleService {
 
         Schedule saved = scheduleRepository.save(schedule);
 
-        // 🔔 Notificar al frontend
         notificarEstadoActual();
-        System.out.println("DTO date: " + dto.getDate());
         return saved;
     }
 
+    // 🔄 ACTUALIZAR ESTADO Y NOTIFICAR
     public Schedule updateEstado(Long id, String nuevoEstado) {
         var opt = scheduleRepository.findById(id);
-        if (opt.isEmpty())
-            return null;
+        if (opt.isEmpty()) return null;
 
         Schedule schedule = opt.get();
         schedule.setEstado(nuevoEstado);
-        return scheduleRepository.save(schedule);
+        Schedule saved = scheduleRepository.save(schedule);
+
+        // 🔔 Notificar a todos los clientes conectados
+        notificarEstadoActual();
+
+        return saved;
     }
 
     // 🔍 FILTROS
@@ -108,55 +110,26 @@ public class ScheduleService {
         return scheduleRepository.findBySubjectId(subjectId);
     }
 
-    // 📊 Estado actual
-    public String calcularEstado(Schedule s) {
-        LocalTime ahora = LocalTime.now();
-        if (ahora.isAfter(s.getStartTime()) && ahora.isBefore(s.getEndTime())) {
-            return "En clase";
-        }
-        return "Libre";
-    }
-
-    // 🔹 Mapper limpio con validaciones
+    // 🔹 Mapper limpio
     public ScheduleViewDTO toViewDTO(Schedule s) {
         ScheduleViewDTO dto = new ScheduleViewDTO();
         dto.setId(s.getId());
-
-        // Fecha
-        dto.setDate(s.getDate() != null
-                ? s.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE)
-                : "");
-
-        // Día de la semana
+        dto.setDate(s.getDate() != null ? s.getDate().format(DateTimeFormatter.ISO_LOCAL_DATE) : "");
         dto.setDayOfWeek(s.getDayOfWeek() != null
                 ? s.getDayOfWeek().getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase()
                 : "");
-
-        // Horas
         dto.setStartTime(s.getStartTime() != null ? s.getStartTime().toString() : "");
         dto.setEndTime(s.getEndTime() != null ? s.getEndTime().toString() : "");
-
-        // Sesión
         dto.setSesion(s.getSesion() != null ? s.getSesion() : "");
-
-        // Aula
         dto.setClassroom(s.getClassroom() != null ? s.getClassroom().getNombre() : "");
-
-        // Curso y docente
         dto.setCourse(s.getSubject() != null && s.getSubject().getCourse() != null
                 ? s.getSubject().getCourse().getNombre()
                 : "");
-
         dto.setTeacher(s.getSubject() != null && s.getSubject().getTeacher() != null
                 ? s.getSubject().getTeacher().getNombre()
                 : "");
-
-        // Turno
         dto.setTurno(s.getStartTime() != null ? calcularTurno(s.getStartTime()) : "");
-
-        // Estado
-        dto.setEstado(s.getEstado() != null ? s.getEstado() : calcularEstado(s));
-
+        dto.setEstado(s.getEstado() != null ? s.getEstado() : "Libre");
         return dto;
     }
 
@@ -166,7 +139,7 @@ public class ScheduleService {
         webSocketService.enviarEstadoActual(data);
     }
 
-    @Scheduled(fixedRate = 60000) // cada minuto
+    @Scheduled(fixedRate = 60000)
     public void notificarCadaMinuto() {
         notificarEstadoActual();
     }
@@ -198,7 +171,15 @@ public class ScheduleService {
                 dto.setCourse(s.getSubject().getCourse().getNombre());
                 dto.setTeacher(s.getSubject().getTeacher().getNombre());
                 dto.setTurno(calcularTurno(s.getStartTime()));
-                dto.setEstado("En clase");
+
+                // ✅ lógica combinada
+                if ("Cancelado".equalsIgnoreCase(s.getEstado())) {
+                    dto.setEstado("Cancelado");
+                } else if (ahora.isAfter(s.getStartTime()) && ahora.isBefore(s.getEndTime())) {
+                    dto.setEstado("En clase");
+                } else {
+                    dto.setEstado("Libre");
+                }
             } else {
                 dto.setEstado("Libre");
                 dto.setCourse("");
@@ -208,19 +189,16 @@ public class ScheduleService {
                 dto.setEndTime("");
                 dto.setTurno(calcularTurno(ahora));
             }
-
             return dto;
         }).toList();
     }
 
-    // 🔹 Método auxiliar para turno
     private String calcularTurno(LocalTime inicio) {
-        if (inicio.isBefore(LocalTime.of(12, 0))) {
+        if (inicio.isBefore(LocalTime.of(12, 0)))
             return "Mañana";
-        } else if (inicio.isBefore(LocalTime.of(18, 0))) {
+        else if (inicio.isBefore(LocalTime.of(18, 0)))
             return "Tarde";
-        } else {
+        else
             return "Noche";
-        }
     }
 }

@@ -31,6 +31,10 @@ public class SubjectService {
         return subjectRepository.findAll();
     }
 
+    public List<Subject> getSubjectsByTeacher(Long teacherId) {
+        return subjectRepository.findByTeacherId(teacherId);
+    }
+
     public SubjectViewDTO toViewDTO(Subject s) {
         SubjectViewDTO dto = new SubjectViewDTO();
         dto.setId(s.getId());
@@ -55,8 +59,8 @@ public class SubjectService {
         subject.setCourse(course);
         subject.setTeacher(teacher);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
-        subject.setModulo(dto.getModulo()); // ✅ ahora sí se guarda
-        subject.setFechaInicio(LocalDate.now()); // ✅ fecha de creación automática
+        subject.setModulo(dto.getModulo());
+        subject.setFechaInicio(LocalDate.now());
 
         return subjectRepository.save(subject);
     }
@@ -85,7 +89,7 @@ public class SubjectService {
         subject.setTeacher(teacher);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
         subject.setModulo(dto.getModulo());
-        subject.setFechaInicio(LocalDate.now()); // o dto.getFechaInicio() si lo mandas
+        subject.setFechaInicio(LocalDate.now());
 
         return subjectRepository.save(subject);
     }
