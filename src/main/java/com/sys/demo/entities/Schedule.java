@@ -31,7 +31,7 @@ public class Schedule {
     private String sesion;
     private LocalDate date;
 
-    private String estado; // 👈 nuevo campo persistente
+    private String estado = "Libre";
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "subject_id")

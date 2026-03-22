@@ -22,6 +22,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/ping").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/schedules/current").permitAll()
@@ -29,7 +30,6 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             );
 
-        // Aquí inyectas el filtro como parámetro, no como campo
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
