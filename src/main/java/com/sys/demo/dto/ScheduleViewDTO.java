@@ -10,6 +10,7 @@ public class ScheduleViewDTO {
     private String endTime;
     private String sesion;
     private String classroom;
+    private Long classroomId;
     private String course;
     private String teacher;
     private String turno;

@@ -85,13 +85,59 @@ public class ScheduleService {
     // 🔄 ACTUALIZAR ESTADO Y NOTIFICAR
     public Schedule updateEstado(Long id, String nuevoEstado) {
         var opt = scheduleRepository.findById(id);
-        if (opt.isEmpty()) return null;
+        if (opt.isEmpty())
+            return null;
 
         Schedule schedule = opt.get();
         schedule.setEstado(nuevoEstado);
         Schedule saved = scheduleRepository.save(schedule);
 
         // 🔔 Notificar a todos los clientes conectados
+        notificarEstadoActual();
+
+        return saved;
+    }
+
+    // 🔄 ACTUALIZAR TODOS LOS DATOS DE UN HORARIO
+    public Schedule updateSchedule(Long id, ScheduleDTO dto) {
+        var opt = scheduleRepository.findById(id);
+        if (opt.isEmpty())
+            return null;
+
+        Schedule schedule = opt.get();
+
+        Subject subject = subjectRepository.findById(dto.getSubjectId())
+                .orElseThrow(() -> new RuntimeException("Subject not found"));
+
+        Classroom classroom = classroomRepository.findById(dto.getClassroomId())
+                .orElseThrow(() -> new RuntimeException("Classroom not found"));
+
+        if (dto.getDate() != null && !dto.getDate().isBlank()) {
+            LocalDate parsedDate = LocalDate.parse(dto.getDate());
+            schedule.setDate(parsedDate);
+            schedule.setDayOfWeek(parsedDate.getDayOfWeek());
+        } else if (dto.getDayOfWeek() != null && !dto.getDayOfWeek().isBlank()) {
+            DayOfWeek day = DayOfWeek.valueOf(dto.getDayOfWeek().toUpperCase());
+            schedule.setDayOfWeek(day);
+        }
+
+        if (dto.getStartTime() != null) {
+            schedule.setStartTime(LocalTime.parse(dto.getStartTime()));
+        }
+        if (dto.getEndTime() != null) {
+            schedule.setEndTime(LocalTime.parse(dto.getEndTime()));
+        }
+
+        schedule.setSesion(dto.getSesion());
+        schedule.setSubject(subject);
+        schedule.setClassroom(classroom);
+
+        if (dto instanceof ScheduleDTO && dto.getDate() != null) {
+            // aquí podrías decidir si quieres resetear estado o mantenerlo
+        }
+
+        Schedule saved = scheduleRepository.save(schedule);
+
         notificarEstadoActual();
 
         return saved;
@@ -122,6 +168,7 @@ public class ScheduleService {
         dto.setEndTime(s.getEndTime() != null ? s.getEndTime().toString() : "");
         dto.setSesion(s.getSesion() != null ? s.getSesion() : "");
         dto.setClassroom(s.getClassroom() != null ? s.getClassroom().getNombre() : "");
+        dto.setClassroomId(s.getClassroom() != null ? s.getClassroom().getId() : null);
         dto.setCourse(s.getSubject() != null && s.getSubject().getCourse() != null
                 ? s.getSubject().getCourse().getNombre()
                 : "");

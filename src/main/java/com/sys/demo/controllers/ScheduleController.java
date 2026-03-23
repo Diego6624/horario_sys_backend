@@ -85,4 +85,16 @@ public class ScheduleController {
         return ResponseEntity.ok(scheduleService.toViewDTO(actualizado));
     }
 
+    // 🔄 ACTUALIZAR TODOS LOS DATOS DE UN HORARIO
+    @PutMapping("/{id}")
+    public ResponseEntity<ScheduleViewDTO> actualizarSchedule(
+            @PathVariable Long id,
+            @RequestBody ScheduleDTO dto) {
+        var actualizado = scheduleService.updateSchedule(id, dto);
+        if (actualizado == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(scheduleService.toViewDTO(actualizado));
+    }
+
 }
