@@ -31,4 +31,7 @@ public class Subject {
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Schedule> schedules;
+
+    @Column(name = "estado")
+    private String estado;
 }

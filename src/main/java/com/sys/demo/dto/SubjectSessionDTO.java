@@ -11,4 +11,5 @@ public class SubjectSessionDTO {
     private String dayOfWeek;
     private String startTime;
     private String endTime;
+    private String fechaInicio;
 }

@@ -44,7 +44,9 @@ public class SubjectSessionService {
         subject.setTeacher(teacher);
         subject.setCourse(course);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
-        subject.setFechaInicio(LocalDate.now());
+        subject.setFechaInicio(dto.getFechaInicio() != null
+                ? LocalDate.parse(dto.getFechaInicio())
+                : LocalDate.now());
         subjectRepo.save(subject);
 
         DayOfWeek dia = DayOfWeek.valueOf(dto.getDayOfWeek().toUpperCase());
@@ -70,7 +72,6 @@ public class SubjectSessionService {
         return subject;
     }
 
-    // Flujo 2: múltiples horarios distintos repetidos por semanas
     public Subject createSubjectWithMultipleSchedules(SubjectSessionMultiDTO dto) {
         Teacher teacher = teacherRepo.findById(dto.getTeacherId())
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
@@ -82,7 +83,9 @@ public class SubjectSessionService {
         subject.setCourse(course);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
         subject.setModulo(dto.getModulo());
-        subject.setFechaInicio(LocalDate.now());
+        subject.setFechaInicio(dto.getFechaInicio() != null
+                ? LocalDate.parse(dto.getFechaInicio())
+                : LocalDate.now());
         subjectRepo.save(subject);
 
         int sesionCounter = 1;
@@ -112,4 +115,5 @@ public class SubjectSessionService {
         }
         return subject;
     }
+
 }

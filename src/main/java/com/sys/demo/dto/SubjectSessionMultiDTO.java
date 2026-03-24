@@ -11,4 +11,5 @@ public class SubjectSessionMultiDTO {
     private Integer duracionSemanas;
     private String modulo;
     private List<ScheduleDTO> schedules;
+    private String fechaInicio;
 }

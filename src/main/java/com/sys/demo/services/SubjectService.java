@@ -60,7 +60,10 @@ public class SubjectService {
         subject.setTeacher(teacher);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
         subject.setModulo(dto.getModulo());
-        subject.setFechaInicio(LocalDate.now());
+        subject.setEstado("ACTIVO");
+        subject.setFechaInicio(dto.getFechaInicio() != null
+                ? LocalDate.parse(dto.getFechaInicio())
+                : LocalDate.now());
 
         return subjectRepository.save(subject);
     }
@@ -89,7 +92,9 @@ public class SubjectService {
         subject.setTeacher(teacher);
         subject.setDuracionSemanas(dto.getDuracionSemanas());
         subject.setModulo(dto.getModulo());
-        subject.setFechaInicio(LocalDate.now());
+        subject.setFechaInicio(dto.getFechaInicio() != null
+                ? LocalDate.parse(dto.getFechaInicio())
+                : LocalDate.now());
 
         return subjectRepository.save(subject);
     }
