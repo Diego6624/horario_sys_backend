@@ -1,6 +1,7 @@
 package com.sys.demo.services;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -92,9 +93,7 @@ public class ScheduleService {
         schedule.setEstado(nuevoEstado);
         Schedule saved = scheduleRepository.save(schedule);
 
-        // 🔔 Notificar a todos los clientes conectados
         notificarEstadoActual();
-
         return saved;
     }
 
@@ -132,14 +131,9 @@ public class ScheduleService {
         schedule.setSubject(subject);
         schedule.setClassroom(classroom);
 
-        if (dto instanceof ScheduleDTO && dto.getDate() != null) {
-            // aquí podrías decidir si quieres resetear estado o mantenerlo
-        }
-
         Schedule saved = scheduleRepository.save(schedule);
 
         notificarEstadoActual();
-
         return saved;
     }
 
@@ -199,9 +193,18 @@ public class ScheduleService {
         List<Schedule> schedulesHoy = scheduleRepository.findByDayOfWeek(hoy);
 
         return aulas.stream().map(aula -> {
-            Schedule s = schedulesHoy.stream()
+            // Clase actual en curso
+            Schedule actual = schedulesHoy.stream()
                     .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
                     .filter(sc -> ahora.isAfter(sc.getStartTime()) && ahora.isBefore(sc.getEndTime()))
+                    .findFirst()
+                    .orElse(null);
+
+            // Próxima clase (la más cercana después de ahora)
+            Schedule proxima = schedulesHoy.stream()
+                    .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
+                    .filter(sc -> sc.getStartTime().isAfter(ahora))
+                    .sorted((a, b) -> a.getStartTime().compareTo(b.getStartTime()))
                     .findFirst()
                     .orElse(null);
 
@@ -210,24 +213,39 @@ public class ScheduleService {
             dto.setDate(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
             dto.setDayOfWeek(hoy.getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase());
 
-            if (s != null) {
-                dto.setId(s.getId());
-                dto.setStartTime(s.getStartTime().toString());
-                dto.setEndTime(s.getEndTime().toString());
-                dto.setSesion(s.getSesion());
-                dto.setCourse(s.getSubject().getCourse().getNombre());
-                dto.setTeacher(s.getSubject().getTeacher().getNombre());
-                dto.setTurno(calcularTurno(s.getStartTime()));
-
-                // ✅ lógica combinada
-                if ("Cancelado".equalsIgnoreCase(s.getEstado())) {
-                    dto.setEstado("Cancelado");
-                } else if (ahora.isAfter(s.getStartTime()) && ahora.isBefore(s.getEndTime())) {
-                    dto.setEstado("En clase");
+            if (actual != null) {
+                // Si hay clase en curso
+                dto.setId(actual.getId());
+                dto.setStartTime(actual.getStartTime().toString());
+                dto.setEndTime(actual.getEndTime().toString());
+                dto.setSesion(actual.getSesion());
+                dto.setCourse(actual.getSubject().getCourse().getNombre());
+                dto.setTeacher(actual.getSubject().getTeacher().getNombre());
+                dto.setTurno(calcularTurno(actual.getStartTime()));
+                dto.setEstado("En clase");
+            } else if (proxima != null) {
+                // Si no hay clase en curso, evaluar la próxima
+                long minutos = Duration.between(ahora, proxima.getStartTime()).toMinutes();
+                if (minutos > 0 && minutos <= 20) {
+                    dto.setId(proxima.getId());
+                    dto.setStartTime(proxima.getStartTime().toString());
+                    dto.setEndTime(proxima.getEndTime().toString());
+                    dto.setSesion(proxima.getSesion());
+                    dto.setCourse(proxima.getSubject().getCourse().getNombre());
+                    dto.setTeacher(proxima.getSubject().getTeacher().getNombre());
+                    dto.setTurno(calcularTurno(proxima.getStartTime()));
+                    dto.setEstado("Siguiente clase");
                 } else {
                     dto.setEstado("Libre");
+                    dto.setCourse("");
+                    dto.setTeacher("");
+                    dto.setSesion("");
+                    dto.setStartTime("");
+                    dto.setEndTime("");
+                    dto.setTurno(calcularTurno(ahora));
                 }
             } else {
+                // Si no hay nada programado
                 dto.setEstado("Libre");
                 dto.setCourse("");
                 dto.setTeacher("");
@@ -236,6 +254,7 @@ public class ScheduleService {
                 dto.setEndTime("");
                 dto.setTurno(calcularTurno(ahora));
             }
+
             return dto;
         }).toList();
     }
