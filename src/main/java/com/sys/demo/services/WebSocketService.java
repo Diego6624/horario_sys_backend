@@ -1,6 +1,7 @@
 package com.sys.demo.services;
 
-import com.sys.demo.dto.HorarioEvent;
+import com.sys.demo.dto.ScheduleViewDTO;
+import java.util.List;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +14,8 @@ public class WebSocketService {
         this.messagingTemplate = messagingTemplate;
     }
 
-    public void enviarActualizacionHorario(String tipo, Long horarioId) {
-
-        HorarioEvent event = new HorarioEvent(tipo, horarioId);
-        
-        messagingTemplate.convertAndSend(
-                "/topic/horarios",
-                event
-        );
+    // Enviar lista completa de horarios con estado actual
+    public void enviarEstadoActual(List<ScheduleViewDTO> data) {
+        messagingTemplate.convertAndSend("/topic/horarios", data);
     }
 }

@@ -8,6 +8,7 @@ import com.sys.demo.dto.AuthResponse;
 import com.sys.demo.dto.LoginRequest;
 import com.sys.demo.entities.User;
 import com.sys.demo.services.UserService;
+import com.sys.demo.config.JwtUtil; // 👈 importa tu utilidad JWT
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,6 +21,9 @@ public class AuthController {
     @Autowired
     private PasswordEncoder encoder;
 
+    @Autowired
+    private JwtUtil jwtUtil; // 👈 inyecta JwtUtil
+
     // ==========================
     // REGISTER
     // ==========================
@@ -27,20 +31,19 @@ public class AuthController {
     public AuthResponse register(@RequestBody User user) {
 
         // Encriptar password
-        user.setPassword(
-                encoder.encode(user.getPassword())
-        );
+        user.setPassword(encoder.encode(user.getPassword()));
 
         // Rol por defecto
         user.setRole("ADMIN"); // luego puedes cambiar a USER
 
         User saved = userService.guardar(user);
 
-        // Respuesta sin password
+        // Respuesta sin password, token null
         return new AuthResponse(
                 saved.getId(),
                 saved.getUsername(),
-                saved.getRole()
+                saved.getRole(),
+                null
         );
     }
 
@@ -49,16 +52,14 @@ public class AuthController {
     // ==========================
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
-
-        User user = userService.login(
-                request.getUsername(),
-                request.getPassword()
-        );
+        User user = userService.login(request.getUsername(), request.getPassword());
+        String token = jwtUtil.generateToken(user.getUsername());
 
         return new AuthResponse(
                 user.getId(),
                 user.getUsername(),
-                user.getRole()
+                user.getRole(),
+                token
         );
     }
 }

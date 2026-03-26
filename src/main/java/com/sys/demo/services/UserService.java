@@ -2,7 +2,6 @@ package com.sys.demo.services;
 
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -10,14 +9,14 @@ import org.springframework.stereotype.Service;
 import com.sys.demo.entities.User;
 import com.sys.demo.repositories.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class UserService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository repo;
-
-    @Autowired
-    private PasswordEncoder encoder;
+    private final UserRepository repo;
+    private final PasswordEncoder encoder;
 
     // ==========================
     // LOGIN
