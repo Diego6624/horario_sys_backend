@@ -213,18 +213,8 @@ public class ScheduleService {
             dto.setDate(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
             dto.setDayOfWeek(hoy.getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase());
 
-            if (actual != null) {
-                // Si hay clase en curso
-                dto.setId(actual.getId());
-                dto.setStartTime(actual.getStartTime().toString());
-                dto.setEndTime(actual.getEndTime().toString());
-                dto.setSesion(actual.getSesion());
-                dto.setCourse(actual.getSubject().getCourse().getNombre());
-                dto.setTeacher(actual.getSubject().getTeacher().getNombre());
-                dto.setTurno(calcularTurno(actual.getStartTime()));
-                dto.setEstado("En clase");
-            } else if (proxima != null) {
-                // Si no hay clase en curso, evaluar la próxima
+            // ⚡ Prioridad: si hay próxima clase en ≤ 20 min, mostrar esa
+            if (proxima != null) {
                 long minutos = Duration.between(ahora, proxima.getStartTime()).toMinutes();
                 if (minutos > 0 && minutos <= 20) {
                     dto.setId(proxima.getId());
@@ -235,17 +225,22 @@ public class ScheduleService {
                     dto.setTeacher(proxima.getSubject().getTeacher().getNombre());
                     dto.setTurno(calcularTurno(proxima.getStartTime()));
                     dto.setEstado("Siguiente clase");
-                } else {
-                    dto.setEstado("Libre");
-                    dto.setCourse("");
-                    dto.setTeacher("");
-                    dto.setSesion("");
-                    dto.setStartTime("");
-                    dto.setEndTime("");
-                    dto.setTurno(calcularTurno(ahora));
+                    return dto; // 👈 devolvemos aquí mismo, no mostramos la actual
                 }
+            }
+
+            // Si no hay próxima en ≤ 20 min, mostrar la actual
+            if (actual != null) {
+                dto.setId(actual.getId());
+                dto.setStartTime(actual.getStartTime().toString());
+                dto.setEndTime(actual.getEndTime().toString());
+                dto.setSesion(actual.getSesion());
+                dto.setCourse(actual.getSubject().getCourse().getNombre());
+                dto.setTeacher(actual.getSubject().getTeacher().getNombre());
+                dto.setTurno(calcularTurno(actual.getStartTime()));
+                dto.setEstado("En clase");
             } else {
-                // Si no hay nada programado
+                // Si no hay nada en curso ni próxima cercana
                 dto.setEstado("Libre");
                 dto.setCourse("");
                 dto.setTeacher("");
@@ -267,4 +262,5 @@ public class ScheduleService {
         else
             return "Noche";
     }
+
 }
