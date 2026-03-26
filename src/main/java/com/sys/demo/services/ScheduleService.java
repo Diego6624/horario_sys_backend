@@ -180,7 +180,7 @@ public class ScheduleService {
         webSocketService.enviarEstadoActual(data);
     }
 
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 5000)
     public void notificarCadaMinuto() {
         notificarEstadoActual();
     }
@@ -196,7 +196,8 @@ public class ScheduleService {
             // Clase actual en curso
             Schedule actual = schedulesHoy.stream()
                     .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
-                    .filter(sc -> ahora.isAfter(sc.getStartTime()) && ahora.isBefore(sc.getEndTime()))
+                    .filter(sc -> (ahora.equals(sc.getStartTime()) || ahora.isAfter(sc.getStartTime()))
+                            && ahora.isBefore(sc.getEndTime()))
                     .findFirst()
                     .orElse(null);
 
@@ -216,7 +217,7 @@ public class ScheduleService {
             // ⚡ Prioridad: si hay próxima clase en ≤ 20 min, mostrar esa
             if (proxima != null) {
                 long minutos = Duration.between(ahora, proxima.getStartTime()).toMinutes();
-                if (minutos > 0 && minutos <= 20) {
+                if (minutos >= 0 && minutos <= 20) { // 👈 ahora incluye el minuto exacto
                     dto.setId(proxima.getId());
                     dto.setStartTime(proxima.getStartTime().toString());
                     dto.setEndTime(proxima.getEndTime().toString());
@@ -225,7 +226,7 @@ public class ScheduleService {
                     dto.setTeacher(proxima.getSubject().getTeacher().getNombre());
                     dto.setTurno(calcularTurno(proxima.getStartTime()));
                     dto.setEstado("Siguiente clase");
-                    return dto; // 👈 devolvemos aquí mismo, no mostramos la actual
+                    return dto;
                 }
             }
 
