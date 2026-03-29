@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.List;
@@ -186,8 +187,10 @@ public class ScheduleService {
     }
 
     public List<ScheduleViewDTO> getCurrentSchedules() {
-        LocalTime ahora = LocalTime.now();
-        DayOfWeek hoy = LocalDate.now().getDayOfWeek();
+        // 👇 Hora y fecha en zona horaria de Perú
+        LocalTime ahora = LocalTime.now(ZoneId.of("America/Lima"));
+        LocalDate hoyFecha = LocalDate.now(ZoneId.of("America/Lima"));
+        DayOfWeek hoy = hoyFecha.getDayOfWeek();
 
         List<Classroom> aulas = classroomRepository.findAll();
         List<Schedule> schedulesHoy = scheduleRepository.findByDayOfWeek(hoy);
@@ -211,13 +214,13 @@ public class ScheduleService {
 
             ScheduleViewDTO dto = new ScheduleViewDTO();
             dto.setClassroom(aula.getNombre());
-            dto.setDate(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+            dto.setDate(hoyFecha.format(DateTimeFormatter.ISO_LOCAL_DATE));
             dto.setDayOfWeek(hoy.getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase());
 
             // ⚡ Prioridad: si hay próxima clase en ≤ 20 min, mostrar esa
             if (proxima != null) {
                 long minutos = Duration.between(ahora, proxima.getStartTime()).toMinutes();
-                if (minutos >= 0 && minutos <= 20) { // 👈 ahora incluye el minuto exacto
+                if (minutos >= 0 && minutos <= 20) {
                     dto.setId(proxima.getId());
                     dto.setStartTime(proxima.getStartTime().toString());
                     dto.setEndTime(proxima.getEndTime().toString());
@@ -250,7 +253,6 @@ public class ScheduleService {
                 dto.setEndTime("");
                 dto.setTurno(calcularTurno(ahora));
             }
-
             return dto;
         }).toList();
     }
