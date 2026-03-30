@@ -187,26 +187,30 @@ public class ScheduleService {
     }
 
     public List<ScheduleViewDTO> getCurrentSchedules() {
-        // 👇 Hora y fecha en zona horaria de Perú
         LocalTime ahora = LocalTime.now(ZoneId.of("America/Lima"));
         LocalDate hoyFecha = LocalDate.now(ZoneId.of("America/Lima"));
         DayOfWeek hoy = hoyFecha.getDayOfWeek();
 
         List<Classroom> aulas = classroomRepository.findAll();
-        List<Schedule> schedulesHoy = scheduleRepository.findByDayOfWeek(hoy);
+        // 👇 ahora trae solo las clases de la fecha exacta
+        List<Schedule> schedulesHoy = scheduleRepository.findByDate(hoyFecha);
 
         return aulas.stream().map(aula -> {
-            // Clase actual en curso
-            Schedule actual = schedulesHoy.stream()
+            // Filtrar horarios cancelados: no se consideran ni como actual ni próxima
+            List<Schedule> activos = schedulesHoy.stream()
                     .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
+                    .filter(sc -> !"Cancelado".equalsIgnoreCase(sc.getEstado()))
+                    .toList();
+
+            // Clase actual en curso
+            Schedule actual = activos.stream()
                     .filter(sc -> (ahora.equals(sc.getStartTime()) || ahora.isAfter(sc.getStartTime()))
                             && ahora.isBefore(sc.getEndTime()))
                     .findFirst()
                     .orElse(null);
 
-            // Próxima clase (la más cercana después de ahora)
-            Schedule proxima = schedulesHoy.stream()
-                    .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
+            // Próxima clase
+            Schedule proxima = activos.stream()
                     .filter(sc -> sc.getStartTime().isAfter(ahora))
                     .sorted((a, b) -> a.getStartTime().compareTo(b.getStartTime()))
                     .findFirst()
@@ -217,7 +221,6 @@ public class ScheduleService {
             dto.setDate(hoyFecha.format(DateTimeFormatter.ISO_LOCAL_DATE));
             dto.setDayOfWeek(hoy.getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase());
 
-            // ⚡ Prioridad: si hay próxima clase en ≤ 20 min, mostrar esa
             if (proxima != null) {
                 long minutos = Duration.between(ahora, proxima.getStartTime()).toMinutes();
                 if (minutos >= 0 && minutos <= 20) {
@@ -233,7 +236,6 @@ public class ScheduleService {
                 }
             }
 
-            // Si no hay próxima en ≤ 20 min, mostrar la actual
             if (actual != null) {
                 dto.setId(actual.getId());
                 dto.setStartTime(actual.getStartTime().toString());
@@ -244,7 +246,6 @@ public class ScheduleService {
                 dto.setTurno(calcularTurno(actual.getStartTime()));
                 dto.setEstado("En clase");
             } else {
-                // Si no hay nada en curso ni próxima cercana
                 dto.setEstado("Libre");
                 dto.setCourse("");
                 dto.setTeacher("");
