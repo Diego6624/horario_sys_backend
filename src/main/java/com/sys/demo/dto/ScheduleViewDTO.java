@@ -16,4 +16,6 @@ public class ScheduleViewDTO {
     private String turno;
     private String estado;
     private String date;
+    private Long subjectId;
+    private String modulo;
 }

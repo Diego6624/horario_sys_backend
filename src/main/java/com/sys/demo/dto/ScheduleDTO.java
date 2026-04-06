@@ -11,4 +11,5 @@ public class ScheduleDTO {
     private Long classroomId;
     private Long subjectId;
     private String date;
+    private Long teacherId;
 }
