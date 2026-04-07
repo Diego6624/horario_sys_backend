@@ -40,5 +40,9 @@ public class Schedule {
     @ManyToOne(optional = false)
     @JoinColumn(name = "classroom_id")
     private Classroom classroom;
-}
 
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "teacher_override_id")
+    private Teacher teacherOverride;
+
+}

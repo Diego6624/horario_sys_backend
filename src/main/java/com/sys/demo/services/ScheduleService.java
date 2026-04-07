@@ -19,9 +19,11 @@ import com.sys.demo.dto.ScheduleViewDTO;
 import com.sys.demo.entities.Classroom;
 import com.sys.demo.entities.Schedule;
 import com.sys.demo.entities.Subject;
+import com.sys.demo.entities.Teacher;
 import com.sys.demo.repositories.ClassroomRepository;
 import com.sys.demo.repositories.ScheduleRepository;
 import com.sys.demo.repositories.SubjectRepository;
+import com.sys.demo.repositories.TeacherRepository;
 
 @Service
 public class ScheduleService {
@@ -37,6 +39,9 @@ public class ScheduleService {
 
     @Autowired
     private WebSocketService webSocketService;
+
+    @Autowired
+    private TeacherRepository teacherRepository;
 
     // 📋 LISTAR TODOS
     public List<ScheduleViewDTO> getAllSchedules() {
@@ -69,6 +74,12 @@ public class ScheduleService {
             LocalDate nextDate = today.with(java.time.temporal.TemporalAdjusters.nextOrSame(day));
             schedule.setDayOfWeek(day);
             schedule.setDate(nextDate);
+        }
+
+        if (dto.getTeacherId() != null) {
+            Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+                    .orElseThrow(() -> new RuntimeException("Teacher not found"));
+            schedule.setTeacherOverride(teacher);
         }
 
         schedule.setStartTime(LocalTime.parse(dto.getStartTime()));
@@ -128,6 +139,14 @@ public class ScheduleService {
             schedule.setEndTime(LocalTime.parse(dto.getEndTime()));
         }
 
+        if (dto.getTeacherId() != null) {
+            Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+                    .orElseThrow(() -> new RuntimeException("Teacher not found"));
+            schedule.setTeacherOverride(teacher);
+        } else {
+            schedule.setTeacherOverride(null); // si quieres limpiar el override
+        }
+
         schedule.setSesion(dto.getSesion());
         schedule.setSubject(subject);
         schedule.setClassroom(classroom);
@@ -167,11 +186,14 @@ public class ScheduleService {
         dto.setCourse(s.getSubject() != null && s.getSubject().getCourse() != null
                 ? s.getSubject().getCourse().getNombre()
                 : "");
-        dto.setTeacher(s.getSubject() != null && s.getSubject().getTeacher() != null
-                ? s.getSubject().getTeacher().getNombre()
-                : "");
+        dto.setTeacher(s.getTeacherOverride() != null ? s.getTeacherOverride().getNombre()
+                : (s.getSubject() != null && s.getSubject().getTeacher() != null
+                        ? s.getSubject().getTeacher().getNombre()
+                        : ""));
         dto.setTurno(s.getStartTime() != null ? calcularTurno(s.getStartTime()) : "");
         dto.setEstado(s.getEstado() != null ? s.getEstado() : "Libre");
+        dto.setSubjectId(s.getSubject() != null ? s.getSubject().getId() : null);
+        dto.setModulo(s.getSubject() != null ? s.getSubject().getModulo() : "");
         return dto;
     }
 
@@ -187,26 +209,30 @@ public class ScheduleService {
     }
 
     public List<ScheduleViewDTO> getCurrentSchedules() {
-        // 👇 Hora y fecha en zona horaria de Perú
         LocalTime ahora = LocalTime.now(ZoneId.of("America/Lima"));
         LocalDate hoyFecha = LocalDate.now(ZoneId.of("America/Lima"));
         DayOfWeek hoy = hoyFecha.getDayOfWeek();
 
         List<Classroom> aulas = classroomRepository.findAll();
-        List<Schedule> schedulesHoy = scheduleRepository.findByDayOfWeek(hoy);
+        // 👇 ahora trae solo las clases de la fecha exacta
+        List<Schedule> schedulesHoy = scheduleRepository.findByDate(hoyFecha);
 
         return aulas.stream().map(aula -> {
-            // Clase actual en curso
-            Schedule actual = schedulesHoy.stream()
+            // Filtrar horarios cancelados: no se consideran ni como actual ni próxima
+            List<Schedule> activos = schedulesHoy.stream()
                     .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
+                    .filter(sc -> !"Cancelado".equalsIgnoreCase(sc.getEstado()))
+                    .toList();
+
+            // Clase actual en curso
+            Schedule actual = activos.stream()
                     .filter(sc -> (ahora.equals(sc.getStartTime()) || ahora.isAfter(sc.getStartTime()))
                             && ahora.isBefore(sc.getEndTime()))
                     .findFirst()
                     .orElse(null);
 
-            // Próxima clase (la más cercana después de ahora)
-            Schedule proxima = schedulesHoy.stream()
-                    .filter(sc -> sc.getClassroom().getId().equals(aula.getId()))
+            // Próxima clase
+            Schedule proxima = activos.stream()
                     .filter(sc -> sc.getStartTime().isAfter(ahora))
                     .sorted((a, b) -> a.getStartTime().compareTo(b.getStartTime()))
                     .findFirst()
@@ -217,7 +243,6 @@ public class ScheduleService {
             dto.setDate(hoyFecha.format(DateTimeFormatter.ISO_LOCAL_DATE));
             dto.setDayOfWeek(hoy.getDisplayName(TextStyle.FULL, new Locale("es", "ES")).toLowerCase());
 
-            // ⚡ Prioridad: si hay próxima clase en ≤ 20 min, mostrar esa
             if (proxima != null) {
                 long minutos = Duration.between(ahora, proxima.getStartTime()).toMinutes();
                 if (minutos >= 0 && minutos <= 20) {
@@ -226,25 +251,33 @@ public class ScheduleService {
                     dto.setEndTime(proxima.getEndTime().toString());
                     dto.setSesion(proxima.getSesion());
                     dto.setCourse(proxima.getSubject().getCourse().getNombre());
-                    dto.setTeacher(proxima.getSubject().getTeacher().getNombre());
+                    dto.setTeacher(
+                            proxima.getTeacherOverride() != null
+                                    ? proxima.getTeacherOverride().getNombre()
+                                    : proxima.getSubject().getTeacher().getNombre());
                     dto.setTurno(calcularTurno(proxima.getStartTime()));
                     dto.setEstado("Siguiente clase");
+                    dto.setSubjectId(proxima.getSubject().getId()); // 👈 usar proxima
+                    dto.setModulo(proxima.getSubject().getModulo()); // 👈 usar proxima
                     return dto;
                 }
             }
 
-            // Si no hay próxima en ≤ 20 min, mostrar la actual
             if (actual != null) {
                 dto.setId(actual.getId());
                 dto.setStartTime(actual.getStartTime().toString());
                 dto.setEndTime(actual.getEndTime().toString());
                 dto.setSesion(actual.getSesion());
                 dto.setCourse(actual.getSubject().getCourse().getNombre());
-                dto.setTeacher(actual.getSubject().getTeacher().getNombre());
+                dto.setTeacher(
+                        actual.getTeacherOverride() != null
+                                ? actual.getTeacherOverride().getNombre()
+                                : actual.getSubject().getTeacher().getNombre());
                 dto.setTurno(calcularTurno(actual.getStartTime()));
                 dto.setEstado("En clase");
+                dto.setSubjectId(actual.getSubject().getId()); // 👈 usar actual
+                dto.setModulo(actual.getSubject().getModulo()); // 👈 usar actual
             } else {
-                // Si no hay nada en curso ni próxima cercana
                 dto.setEstado("Libre");
                 dto.setCourse("");
                 dto.setTeacher("");
