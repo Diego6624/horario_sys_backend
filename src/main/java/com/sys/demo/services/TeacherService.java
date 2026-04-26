@@ -37,4 +37,8 @@ public class TeacherService {
         Teacher teacher = getTeacherById(id);
         teacherRepository.delete(teacher);
     }
+
+    public Teacher saveTeacher(Teacher teacher) {
+        return teacherRepository.save(teacher);
+    }
 }
