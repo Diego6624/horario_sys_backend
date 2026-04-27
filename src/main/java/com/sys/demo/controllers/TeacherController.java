@@ -33,6 +33,12 @@ public class TeacherController {
         return teacherService.getAllTeachers();
     }
 
+    @PostMapping
+    public ResponseEntity<Teacher> createTeacher(@RequestBody Teacher teacher) {
+        Teacher saved = teacherService.createTeacher(teacher);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
     @PostMapping("/{id}/photo")
     public ResponseEntity<Teacher> uploadPhoto(
             @PathVariable Long id,
