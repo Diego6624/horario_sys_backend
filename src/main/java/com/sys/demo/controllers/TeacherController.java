@@ -11,6 +11,8 @@ import com.sys.demo.entities.Teacher;
 import com.sys.demo.services.SubjectService;
 import com.sys.demo.services.TeacherService;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,17 +44,20 @@ public class TeacherController {
     @PostMapping("/{id}/photo")
     public ResponseEntity<Teacher> uploadPhoto(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request) {
+
         Teacher teacher = teacherService.getTeacherById(id);
 
         try {
-            // Guardar archivo en carpeta local
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             Path path = Paths.get("uploads/teachers/" + fileName);
             Files.copy(file.getInputStream(), path);
 
-            // Guardar ruta en BD
-            teacher.setPhotoUrl("/uploads/teachers/" + fileName);
+            String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+            String fileUrl = baseUrl + "/uploads/teachers/" + fileName;
+
+            teacher.setPhotoUrl(fileUrl);
             teacherService.saveTeacher(teacher);
 
             return ResponseEntity.ok(teacher);
