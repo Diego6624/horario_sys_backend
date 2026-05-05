@@ -28,7 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/schedules/current").permitAll()
                         .requestMatchers("/ws-horarios/**").permitAll()
-                        .requestMatchers("/api/teachers/*/photo").permitAll()
+                        .requestMatchers("/api/teachers/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .anyRequest().authenticated());
 
