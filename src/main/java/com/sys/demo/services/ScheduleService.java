@@ -190,6 +190,12 @@ public class ScheduleService {
                 : (s.getSubject() != null && s.getSubject().getTeacher() != null
                         ? s.getSubject().getTeacher().getNombre()
                         : ""));
+        dto.setTeacherPhotoUrl(
+                s.getTeacherOverride() != null
+                        ? s.getTeacherOverride().getPhotoUrl()
+                        : (s.getSubject() != null && s.getSubject().getTeacher() != null
+                                ? s.getSubject().getTeacher().getPhotoUrl()
+                                : ""));
         dto.setTurno(s.getStartTime() != null ? calcularTurno(s.getStartTime()) : "");
         dto.setEstado(s.getEstado() != null ? s.getEstado() : "Libre");
         dto.setSubjectId(s.getSubject() != null ? s.getSubject().getId() : null);
@@ -257,6 +263,10 @@ public class ScheduleService {
                                     : proxima.getSubject().getTeacher().getNombre());
                     dto.setTurno(calcularTurno(proxima.getStartTime()));
                     dto.setEstado("Siguiente clase");
+                    dto.setTeacherPhotoUrl(
+                            proxima.getTeacherOverride() != null
+                                    ? proxima.getTeacherOverride().getPhotoUrl()
+                                    : proxima.getSubject().getTeacher().getPhotoUrl());
                     dto.setSubjectId(proxima.getSubject().getId()); // 👈 usar proxima
                     dto.setModulo(proxima.getSubject().getModulo()); // 👈 usar proxima
                     return dto;
@@ -275,6 +285,10 @@ public class ScheduleService {
                                 : actual.getSubject().getTeacher().getNombre());
                 dto.setTurno(calcularTurno(actual.getStartTime()));
                 dto.setEstado("En clase");
+                dto.setTeacherPhotoUrl(
+                        actual.getTeacherOverride() != null
+                                ? actual.getTeacherOverride().getPhotoUrl()
+                                : actual.getSubject().getTeacher().getPhotoUrl());
                 dto.setSubjectId(actual.getSubject().getId()); // 👈 usar actual
                 dto.setModulo(actual.getSubject().getModulo()); // 👈 usar actual
             } else {

@@ -18,4 +18,5 @@ public class ScheduleViewDTO {
     private String date;
     private Long subjectId;
     private String modulo;
+    private String teacherPhotoUrl;
 }
